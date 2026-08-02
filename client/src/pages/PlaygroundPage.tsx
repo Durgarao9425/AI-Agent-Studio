@@ -1,16 +1,25 @@
 // pages/PlaygroundPage.tsx — Prompt Playground with parameter controls and A/B comparison
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMutation } from '@tanstack/react-query';
 import { Sliders, Play, Loader2, Columns, BarChart3, Copy, Check } from 'lucide-react';
+import { useSettingsStore } from '../store/useSettingsStore';
 import { playgroundApi } from '../api';
 import { PlaygroundResult } from '../types';
 import { cn, formatDuration, formatCost, formatTokens } from '../lib/utils';
 import ReactMarkdown from 'react-markdown';
 import rehypeHighlight from 'rehype-highlight';
 
-const MODELS = ['gpt-4o', 'gpt-4o-mini', 'gpt-4.1', 'gpt-4-turbo'];
+const OPENAI_MODELS = ['gpt-4o', 'gpt-4o-mini', 'gpt-4.1', 'gpt-4-turbo'];
+const OPENROUTER_MODELS = [
+  'meta-llama/llama-3.1-8b-instruct:free',
+  'google/gemma-2-9b-it:free',
+  'meta-llama/llama-3-8b-instruct:free',
+  'nvidia/nemotron-4-340b-instruct:free',
+  'mistralai/mistral-7b-instruct:free',
+  'qwen/qwen-2-7b-instruct:free'
+];
 
 interface PromptConfig {
   systemPrompt: string;
@@ -104,10 +113,14 @@ function OutputPanel({
 }
 
 export function PlaygroundPage() {
+  const { apiKey } = useSettingsStore();
+  const isOR = apiKey?.startsWith('sk-or-');
+  const modelsList = isOR ? OPENROUTER_MODELS : OPENAI_MODELS;
+
   const [config, setConfig] = useState<PromptConfig>({
     systemPrompt: 'You are a helpful AI assistant.',
     userPrompt: 'Explain quantum computing in simple terms.',
-    model: 'gpt-4o',
+    model: isOR ? 'meta-llama/llama-3.1-8b-instruct:free' : 'gpt-4o',
     temperature: 0.7,
     topP: 1,
     maxTokens: 1024,
@@ -115,9 +128,18 @@ export function PlaygroundPage() {
 
   const [compareConfig, setCompareConfig] = useState<PromptConfig>({
     ...config,
-    model: 'gpt-4o-mini',
+    model: isOR ? 'google/gemma-2-9b-it:free' : 'gpt-4o-mini',
     temperature: 0.3,
   });
+
+  // Sync default models when API provider changes
+  useEffect(() => {
+    const isORKey = apiKey?.startsWith('sk-or-');
+    const primaryDefault = isORKey ? 'meta-llama/llama-3.1-8b-instruct:free' : 'gpt-4o';
+    const compareDefault = isORKey ? 'google/gemma-2-9b-it:free' : 'gpt-4o-mini';
+    setConfig((prev) => ({ ...prev, model: primaryDefault }));
+    setCompareConfig((prev) => ({ ...prev, model: compareDefault }));
+  }, [apiKey]);
 
   const [compareMode, setCompareMode] = useState(false);
   const [result, setResult] = useState<PlaygroundResult | null>(null);
@@ -182,7 +204,7 @@ export function PlaygroundPage() {
               onChange={(e) => updateConfig('model', e.target.value)}
               className="input text-sm"
             >
-              {MODELS.map((m) => <option key={m} value={m}>{m}</option>)}
+              {modelsList.map((m) => <option key={m} value={m}>{m}</option>)}
             </select>
           </div>
 
@@ -239,7 +261,7 @@ export function PlaygroundPage() {
             <div>
               <label className="text-xs text-text-muted block mb-1.5">Model</label>
               <select value={compareConfig.model} onChange={(e) => updateCompare('model', e.target.value)} className="input text-sm">
-                {MODELS.map((m) => <option key={m} value={m}>{m}</option>)}
+                {modelsList.map((m) => <option key={m} value={m}>{m}</option>)}
               </select>
             </div>
 
