@@ -2,21 +2,32 @@
 // Positions the sidebar and content area with proper spacing.
 
 import { ReactNode } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 import { motion } from 'framer-motion';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { cn } from '../../lib/utils';
+import { LayoutDashboard, MessageSquare, Bot, GitBranch, Settings } from 'lucide-react';
 
 interface LayoutProps {
   children: ReactNode;
 }
 
+const BOTTOM_NAV_ITEMS = [
+  { path: '/', icon: LayoutDashboard, label: 'Dashboard', color: '#7c3aed' },
+  { path: '/chat', icon: MessageSquare, label: 'Chat', color: '#06b6d4' },
+  { path: '/agents', icon: Bot, label: 'Agents', color: '#8b5cf6' },
+  { path: '/langchain', icon: GitBranch, label: 'LangChain', color: '#3b82f6' },
+  { path: '/settings', icon: Settings, label: 'Settings', color: '#8899cc' },
+];
+
 export function Layout({ children }: LayoutProps) {
   const { collapsed, mobileSidebarOpen, setMobileSidebarOpen } = useSettingsStore();
+  const location = useLocation();
 
   return (
-    <div className="min-h-screen flex relative overflow-x-hidden" style={{ background: '#0a0f1e' }}>
+    <div className="min-h-screen flex relative overflow-x-hidden pb-16 md:pb-0" style={{ background: '#0a0f1e' }}>
       {/* Mobile Sidebar backdrop */}
       {mobileSidebarOpen && (
         <div 
@@ -41,6 +52,38 @@ export function Layout({ children }: LayoutProps) {
         >
           {children}
         </motion.main>
+      </div>
+
+      {/* Mobile Bottom Navigation Bar */}
+      <div className="fixed bottom-0 left-0 right-0 h-16 bg-[#0d1224]/90 backdrop-blur-lg border-t border-white/5 z-40 md:hidden flex items-center justify-around px-2 shadow-lg">
+        {BOTTOM_NAV_ITEMS.map((item) => {
+          const isActive =
+            item.path === '/'
+              ? location.pathname === '/'
+              : location.pathname.startsWith(item.path);
+
+          return (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={cn(
+                "flex flex-col items-center gap-1 py-1.5 px-3 rounded-xl transition-all duration-200",
+                isActive ? "text-white" : "text-text-secondary"
+              )}
+            >
+              <div 
+                className={cn(
+                  "p-1 rounded-lg transition-colors",
+                  isActive ? "bg-white/10" : ""
+                )}
+                style={{ color: isActive ? item.color : undefined }}
+              >
+                <item.icon size={18} />
+              </div>
+              <span className="text-[9px] font-medium tracking-wide">{item.label}</span>
+            </NavLink>
+          );
+        })}
       </div>
 
       {/* Ambient background glows */}

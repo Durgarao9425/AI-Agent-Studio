@@ -32,8 +32,8 @@ export function Topbar() {
     <motion.header
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      className="h-16 flex items-center justify-between px-6 border-b border-white/5"
-      style={{ background: 'rgba(10, 15, 30, 0.8)', backdropFilter: 'blur(20px)' }}
+      className="sticky top-0 z-30 h-16 flex items-center justify-between px-6 border-b border-white/5 flex-shrink-0"
+      style={{ background: 'rgba(10, 15, 30, 0.85)', backdropFilter: 'blur(20px)' }}
     >
       {/* Page Info */}
       <div className="flex items-center gap-2 min-w-0 flex-1 mr-2">
