@@ -99,9 +99,8 @@ router.post('/call', async (req: Request, res: Response): Promise<void> => {
 
       // Add tool result to messages for the follow-up LLM call
       toolMessages.push({
-        role: 'tool' as unknown as 'user', // TypeScript workaround for tool role
+        role: 'tool',
         content: JSON.stringify(result.output),
-        // @ts-expect-error tool_call_id is valid but not in our Message type
         tool_call_id: toolCall.id,
       });
     }

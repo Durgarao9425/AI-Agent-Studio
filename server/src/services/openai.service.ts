@@ -67,7 +67,12 @@ export async function chatCompletion(
 
   try {
     const client = getOpenAIClient(apiKey);
-    const formattedMessages = messages.map(({ role, content }) => ({ role, content }));
+    const formattedMessages = messages.map((m) => {
+      const msg: any = { role: m.role, content: m.content || '' };
+      if (m.tool_calls) msg.tool_calls = m.tool_calls;
+      if (m.tool_call_id) msg.tool_call_id = m.tool_call_id;
+      return msg;
+    });
     
     const response = await client.chat.completions.create({
       model: model || (apiKey.startsWith('sk-or-') ? 'meta-llama/llama-3-8b-instruct:free' : 'gpt-4o'),
@@ -109,7 +114,12 @@ export async function* streamChatCompletion(
 
   try {
     const client = getOpenAIClient(apiKey);
-    const formattedMessages = messages.map(({ role, content }) => ({ role, content }));
+    const formattedMessages = messages.map((m) => {
+      const msg: any = { role: m.role, content: m.content || '' };
+      if (m.tool_calls) msg.tool_calls = m.tool_calls;
+      if (m.tool_call_id) msg.tool_call_id = m.tool_call_id;
+      return msg;
+    });
     
     const stream = await client.chat.completions.create({
       model: model || (apiKey.startsWith('sk-or-') ? 'meta-llama/llama-3-8b-instruct:free' : 'gpt-4o'),
