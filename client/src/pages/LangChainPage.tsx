@@ -85,18 +85,24 @@ export function LangChainPage() {
       setResult(data);
       setActiveNode(null);
     },
-    onError: () => setActiveNode(null),
+    onError: (err: any) => {
+      setActiveNode(null);
+      alert(`Chain execution failed: ${err?.response?.data?.error || err.message}`);
+    },
   });
 
   const conversationMutation = useMutation({
     mutationFn: (msg: string) => langchainApi.conversation(sessionId, msg),
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
       setChatMessages((prev) => [
         ...prev,
-        { role: 'user', content: chatInput },
+        { role: 'user', content: variables },
         { role: 'assistant', content: data.response, memory: data.memoryContents },
       ]);
       setChatInput('');
+    },
+    onError: (err: any) => {
+      alert(`Conversation failed: ${err?.response?.data?.error || err.message}`);
     },
   });
 
