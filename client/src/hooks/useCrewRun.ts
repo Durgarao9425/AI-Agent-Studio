@@ -4,6 +4,7 @@
 import { useState, useCallback } from 'react';
 import { CrewStep } from '../types';
 import { useSettingsStore } from '../store/useSettingsStore';
+import { API_BASE_URL } from '../api/client';
 
 interface CrewRunState {
   steps: CrewStep[];
@@ -28,7 +29,7 @@ export function useCrewRun() {
       setState({ steps: [], summary: null, isRunning: true, currentAgentIndex: 0, error: null });
 
       try {
-        const response = await fetch('/api/crew/run', {
+        const response = await fetch(`${API_BASE_URL}/crew/run`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

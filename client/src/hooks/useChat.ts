@@ -6,6 +6,7 @@ import { useState, useCallback, useRef } from 'react';
 import { Message } from '../types';
 import { generateId } from '../lib/utils';
 import { useSettingsStore } from '../store/useSettingsStore';
+import { API_BASE_URL } from '../api/client';
 
 interface UseChatOptions {
   agentId?: string;
@@ -48,7 +49,7 @@ export function useChat(options: UseChatOptions = {}) {
           userMessage,
         ].map(({ role, content }) => ({ role, content }));
 
-        const response = await fetch('/api/chat/stream', {
+        const response = await fetch(`${API_BASE_URL}/chat/stream`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
