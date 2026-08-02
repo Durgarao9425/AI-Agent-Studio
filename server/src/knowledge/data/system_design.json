@@ -1,0 +1,38 @@
+[
+  {
+    "id": "system_design_dsa",
+    "title": "System Design, Data Structures & High Scalability Architecture",
+    "category": "system_design",
+    "keywords": ["system design", "software engineering", "data structures", "algorithms", "dsa", "interview questions", "scalability", "load balancing", "caching", "microservices", "sharding", "cap theorem"],
+    "description": "Fundamental concepts in large-scale system architecture, high-throughput distributed systems, algorithms, and technical interview problem solving.",
+    "detailedExplanation": "Designing scalable enterprise applications requires balancing availability vs consistency (CAP Theorem), implementing caching tiers (Redis), database read replicas / sharding, message queues (Kafka, RabbitMQ) for asynchronous processing, and choosing optimal data structures (HashMaps, Trees, Graphs, Heaps) for sub-millisecond execution.",
+    "architectureFlow": "Client -> Global CDN -> Load Balancer (Nginx/ALB) -> API Gateway -> Stateless Microservices -> Redis Cache -> Primary DB (Writes) + Read Replicas (Reads)",
+    "examples": [
+      "URL Shortener system design (Bitly / TinyURL)",
+      "Rate Limiter implementation (Token Bucket / Sliding Window Log)",
+      "Distributed Chat / Messaging System design (Slack / WhatsApp)"
+    ],
+    "interviewQuestions": [
+      {
+        "question": "Explain the CAP Theorem in Distributed Systems.",
+        "answer": "CAP states that a distributed system can guarantee at most 2 of 3 properties simultaneously: Consistency (all nodes see same data), Availability (every request receives non-error response), and Partition Tolerance (system operates despite network breaks). Virtually all cloud systems pick CP or AP."
+      },
+      {
+        "question": "How does a Sliding Window Rate Limiter work?",
+        "answer": "It tracks request timestamps in a sorted set (or Redis zset). When a new request arrives, old timestamps outside the current window are removed, and if remaining count < limit, request is allowed."
+      }
+    ],
+    "sampleCode": "// Sliding Window Rate Limiter in TypeScript\nexport class RateLimiter {\n  private requests: Map<string, number[]> = new Map();\n\n  isAllowed(userId: string, limit = 10, windowMs = 60000): boolean {\n    const now = Date.now();\n    const timestamps = this.requests.get(userId) || [];\n    const validTimestamps = timestamps.filter(ts => now - ts < windowMs);\n    \n    if (validTimestamps.length < limit) {\n      validTimestamps.push(now);\n      this.requests.set(userId, validTimestamps);\n      return true;\n    }\n    return false;\n  }\n}",
+    "bestPractices": [
+      "Design stateless API servers so horizontal autoscaling is trivial",
+      "Decouple heavy synchronous tasks into async message queues (Kafka / BullMQ)",
+      "Always design with failure in mind — implement circuit breakers and retries with exponential backoff"
+    ],
+    "commonMistakes": [
+      "Single Point of Failure (SPOF) without failover database replicas",
+      "Premature optimization before identifying actual bottleneck via profiling"
+    ],
+    "references": ["github.com/donnemartin/system-design-primer"],
+    "tags": ["system-design", "algorithms", "dsa", "interviews"]
+  }
+]

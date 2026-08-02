@@ -1,0 +1,67 @@
+[
+  {
+    "id": "docker_kubernetes",
+    "title": "Containerization & Orchestration: Docker & Kubernetes",
+    "category": "devops_cloud",
+    "keywords": ["docker", "kubernetes", "k8s", "containers", "dockerfile", "docker-compose", "pods", "deployments", "services", "ingress", "helm"],
+    "description": "Docker package applications into isolated containers. Kubernetes automates container deployment, scaling, load balancing, and self-healing.",
+    "detailedExplanation": "Docker uses Linux namespaces and cgroups to isolate process resources in light weight images. Kubernetes manages clusters of worker nodes running Pods (containers), controlled by Deployments, Services (kube-proxy), and Ingress controllers.",
+    "architectureFlow": "Dockerfile -> Docker Build -> Image Registry (ECR/DockerHub) -> Kubernetes Deployment -> ReplicaSet -> Pods -> Ingress / LoadBalancer -> Client",
+    "examples": [
+      "Multi-stage Dockerfile for Node.js production builds",
+      "Kubernetes Deployment & HPA (Horizontal Pod Autoscaler) manifest",
+      "Docker Compose multi-container setup (Web + Node Server + Redis + Postgres)"
+    ],
+    "interviewQuestions": [
+      {
+        "question": "Difference between a Docker Image and a Docker Container?",
+        "answer": "A Docker Image is a read-only immutable template containing application code, runtime, and dependencies. A Docker Container is a runnable instance of a Docker image executing in isolation."
+      },
+      {
+        "question": "What is a Kubernetes Pod?",
+        "answer": "A Pod is the smallest deployable unit in Kubernetes. It wraps one or more containers that share network IP, storage volumes, and runtime specification."
+      }
+    ],
+    "sampleCode": "# Production Multi-Stage Dockerfile for Node.js\nFROM node:20-alpine AS builder\nWORKDIR /app\nCOPY package*.json ./\nRUN npm ci --legacy-peer-deps\nCOPY . .\nRUN npm run build\n\nFROM node:20-alpine AS runner\nWORKDIR /app\nCOPY --from=builder /app/dist ./dist\nCOPY --from=builder /app/package*.json ./\nRUN npm ci --omit=dev\nEXPOSE 3001\nCMD [\"node\", \"dist/index.js\"]",
+    "bestPractices": [
+      "Use multi-stage Docker builds to minimize final container image size (<100MB)",
+      "Never run containers as root user — use unprivileged non-root users",
+      "Define resource limits (CPU/Memory) on all Kubernetes Pod specifications"
+    ],
+    "commonMistakes": [
+      "Storing API keys or secrets inside static Dockerfile images",
+      "Using 'latest' tag in production manifests instead of specific version hashes"
+    ],
+    "references": ["docker.com", "kubernetes.io"],
+    "tags": ["devops", "docker", "kubernetes", "cloud"]
+  },
+  {
+    "id": "aws_cloud_cicd",
+    "title": "Cloud Infrastructure & CI/CD Pipelines (AWS, GCP, Azure, GitHub Actions)",
+    "category": "devops_cloud",
+    "keywords": ["aws", "azure", "gcp", "git", "github", "github actions", "ci/cd", "pipeline", "s3", "ec2", "ecs", "cloudfront", "terraform"],
+    "description": "Cloud hosting services (AWS, Azure, GCP) and automated Continuous Integration / Continuous Deployment (CI/CD) pipelines.",
+    "detailedExplanation": "CI/CD automates code testing, linting, building, and deployment upon code push (git push). Cloud platforms provide virtual infrastructure like compute (EC2/ECS), storage (S3), CDN edge distribution (CloudFront), and managed databases (RDS).",
+    "architectureFlow": "Git Commit -> GitHub Push -> GitHub Action Trigger -> Run Tests -> Docker Build -> Push to ECR -> AWS ECS Task Deployment",
+    "examples": [
+      "GitHub Actions workflow for automated testing and Vite deployment to S3 + CloudFront",
+      "Terraform Infrastructure as Code (IaC) provisioning AWS VPC and EKS cluster"
+    ],
+    "interviewQuestions": [
+      {
+        "question": "What is CI/CD and why is it essential in modern DevOps?",
+        "answer": "Continuous Integration (CI) automatically builds and tests code on every push to detect bugs early. Continuous Deployment (CD) automatically releases passing builds to production environments, enabling zero-downtime shipping."
+      }
+    ],
+    "sampleCode": "# .github/workflows/deploy.yml\nname: Build & Deploy\non:\n  push:\n    branches: [ main ]\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - uses: actions/setup-node@v4\n        with: { node-version: 20 }\n      - run: npm ci\n      - run: npm run build\n      - run: npm test",
+    "bestPractices": [
+      "Use Infrastructure as Code (Terraform / CloudFormation) instead of manual dashboard clicks",
+      "Secure CI/CD pipelines using OIDC role assumption rather than static long-lived AWS keys"
+    ],
+    "commonMistakes": [
+      "Hardcoding IAM access keys in public GitHub repositories"
+    ],
+    "references": ["aws.amazon.com", "github.com/features/actions"],
+    "tags": ["devops", "aws", "cicd", "github"]
+  }
+]

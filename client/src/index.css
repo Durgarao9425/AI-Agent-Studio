@@ -1,0 +1,326 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── CSS Variables ──────────────────────────────────────────────────────────── */
+:root {
+  --radius: 0.75rem;
+  --sidebar-width: 260px;
+}
+
+/* ── Base Reset ─────────────────────────────────────────────────────────────── */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: #0a0f1e;
+  color: #f0f4ff;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── Scrollbar Styling ──────────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0f1629;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e2a4a;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #2e3e6a;
+}
+
+/* ── Glass Morphism Components ──────────────────────────────────────────────── */
+@layer components {
+  .glass {
+    @apply backdrop-blur-xl bg-white/5 border border-white/10;
+  }
+  
+  .glass-strong {
+    @apply backdrop-blur-2xl bg-white/[0.08] border border-white/15;
+  }
+
+  .card {
+    @apply glass rounded-2xl p-6 shadow-card;
+  }
+
+  .card-hover {
+    @apply card transition-all duration-300 hover:bg-white/[0.08] hover:border-white/20 hover:shadow-violet-glow cursor-pointer;
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-violet-light to-cyan;
+  }
+
+  .gradient-text-violet {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-violet-light to-purple-400;
+  }
+
+  /* Buttons */
+  .btn-primary {
+    @apply inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm
+           bg-gradient-violet text-white border border-violet/30
+           hover:shadow-violet-glow hover:scale-105 
+           active:scale-95 transition-all duration-200;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm
+           glass text-text-primary
+           hover:bg-white/10 hover:border-white/20
+           active:scale-95 transition-all duration-200;
+  }
+
+  .btn-cyan {
+    @apply inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm
+           bg-gradient-cyan text-white
+           hover:shadow-cyan-glow hover:scale-105
+           active:scale-95 transition-all duration-200;
+  }
+
+  /* Input fields */
+  .input {
+    @apply w-full px-4 py-2.5 rounded-xl glass text-text-primary placeholder-text-muted
+           border border-white/10 focus:border-violet/50 focus:outline-none focus:ring-2 focus:ring-violet/20
+           transition-all duration-200 text-sm;
+  }
+
+  .textarea {
+    @apply input resize-none leading-relaxed;
+  }
+
+  /* Badges */
+  .badge {
+    @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .badge-violet {
+    @apply badge bg-violet/20 text-violet-light border border-violet/30;
+  }
+
+  .badge-cyan {
+    @apply badge bg-cyan/20 text-cyan-light border border-cyan/30;
+  }
+
+  .badge-emerald {
+    @apply badge bg-emerald/20 text-emerald-light border border-emerald/30;
+  }
+
+  .badge-amber {
+    @apply badge bg-amber/20 text-amber-light border border-amber/30;
+  }
+
+  .badge-rose {
+    @apply badge bg-rose/20 text-rose-light border border-rose/30;
+  }
+
+  /* Section headers */
+  .section-title {
+    @apply text-2xl font-bold text-text-primary tracking-tight;
+  }
+
+  .section-subtitle {
+    @apply text-text-secondary text-sm mt-1;
+  }
+
+  /* Divider */
+  .divider {
+    @apply border-t border-white/10;
+  }
+
+  /* Code blocks */
+  .code-block {
+    @apply font-mono text-sm bg-black/40 rounded-xl p-4 border border-white/10 overflow-x-auto;
+  }
+
+  /* Status dots */
+  .status-dot {
+    @apply w-2 h-2 rounded-full animate-pulse;
+  }
+
+  .status-dot-green {
+    @apply status-dot bg-emerald;
+  }
+
+  .status-dot-amber {
+    @apply status-dot bg-amber;
+  }
+
+  .status-dot-red {
+    @apply status-dot bg-rose;
+  }
+
+  /* Sidebar nav item */
+  .nav-item {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-text-secondary text-sm font-medium
+           transition-all duration-200 cursor-pointer;
+  }
+
+  .nav-item:hover {
+    @apply bg-white/5 text-text-primary;
+  }
+
+  .nav-item.active {
+    @apply bg-violet/15 text-violet-light border border-violet/20;
+  }
+
+  /* Glow effect behind cards */
+  .glow-violet {
+    @apply relative before:absolute before:inset-0 before:rounded-2xl 
+           before:bg-glow-violet before:-z-10 before:blur-xl;
+  }
+}
+
+/* ── Animations ─────────────────────────────────────────────────────────────── */
+@layer utilities {
+  .animate-fade-in {
+    animation: fade-in 0.4s ease-out;
+  }
+
+  .animate-slide-in-right {
+    animation: slide-in-right 0.4s ease-out;
+  }
+}
+
+/* ── Markdown Styles (for AI responses) ─────────────────────────────────────── */
+.markdown-content {
+  line-height: 1.75;
+  color: #d0dbff;
+}
+
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3,
+.markdown-content h4 {
+  color: #f0f4ff;
+  font-weight: 700;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.3;
+}
+
+.markdown-content h1 { font-size: 1.5rem; }
+.markdown-content h2 { font-size: 1.25rem; }
+.markdown-content h3 { font-size: 1.1rem; }
+
+.markdown-content p {
+  margin-bottom: 0.875rem;
+}
+
+.markdown-content code {
+  font-family: 'JetBrains Mono', monospace;
+  background: rgba(0, 0, 0, 0.4);
+  color: #a78bfa;
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+  font-size: 0.875em;
+  border: 1px solid rgba(124, 58, 237, 0.2);
+}
+
+.markdown-content pre {
+  background: rgba(0, 0, 0, 0.5) !important;
+  border: 1px solid rgba(30, 42, 74, 0.8) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  margin: 1rem 0 !important;
+  overflow-x: auto;
+  position: relative;
+}
+
+.markdown-content pre code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  border: none;
+  font-size: 0.875rem;
+}
+
+.markdown-content ul, .markdown-content ol {
+  padding-left: 1.5rem;
+  margin-bottom: 0.875rem;
+}
+
+.markdown-content li {
+  margin-bottom: 0.25rem;
+}
+
+.markdown-content blockquote {
+  border-left: 3px solid #7c3aed;
+  padding-left: 1rem;
+  margin: 1rem 0;
+  color: #8899cc;
+  font-style: italic;
+}
+
+.markdown-content strong {
+  color: #f0f4ff;
+  font-weight: 600;
+}
+
+.markdown-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+}
+
+.markdown-content th,
+.markdown-content td {
+  border: 1px solid #1e2a4a;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+
+.markdown-content th {
+  background: rgba(124, 58, 237, 0.1);
+  color: #f0f4ff;
+  font-weight: 600;
+}
+
+.markdown-content hr {
+  border: none;
+  border-top: 1px solid #1e2a4a;
+  margin: 1.5rem 0;
+}
+
+/* ── Typing Cursor Animation ─────────────────────────────────────────────────── */
+.typing-cursor::after {
+  content: '▋';
+  animation: pulse-glow 1s ease-in-out infinite;
+  color: #7c3aed;
+  margin-left: 2px;
+}
+
+/* ── Custom Highlight.js Theme ───────────────────────────────────────────────── */
+.hljs {
+  background: transparent !important;
+  color: #c9d1ff !important;
+}
+.hljs-keyword { color: #a78bfa !important; }
+.hljs-string { color: #6ee7b7 !important; }
+.hljs-number { color: #fcd34d !important; }
+.hljs-comment { color: #4a5a8a !important; font-style: italic; }
+.hljs-function { color: #67e8f9 !important; }
+.hljs-built_in { color: #f9a8d4 !important; }
+.hljs-type { color: #a78bfa !important; }
+.hljs-variable { color: #c9d1ff !important; }
+.hljs-attr { color: #6ee7b7 !important; }
+.hljs-title { color: #67e8f9 !important; }
+.hljs-params { color: #c9d1ff !important; }

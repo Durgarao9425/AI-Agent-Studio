@@ -1,0 +1,135 @@
+[
+  {
+    "id": "langchain",
+    "title": "LangChain Architecture & LCEL Chain Patterns",
+    "category": "ai_ml",
+    "keywords": ["langchain", "lcel", "prompt template", "buffer memory", "conversation chain", "chat model", "output parser", "chain", "runnable", "runnableSequence"],
+    "description": "LangChain is a framework designed to simplify creating applications using large language models (LLMs) through composable abstractions.",
+    "detailedExplanation": "LangChain Expression Language (LCEL) uses the pipe operator (`|`) to compose Runnables into a declarative sequence. Core components include PromptTemplates, ChatModels (ChatOpenAI), OutputParsers (StringOutputParser, JsonOutputParser), and Memory modules (BufferMemory, SummaryMemory).",
+    "architectureFlow": "User Prompt -> PromptTemplate.format() -> ChatOpenAI LLM -> StringOutputParser -> Parsed Response String",
+    "examples": [
+      "LCEL Chain: ChatPromptTemplate | ChatOpenAI | StringOutputParser",
+      "ConversationChain with BufferMemory for session context persistence",
+      "Sequential Chains passing context outputs from chain A to chain B"
+    ],
+    "interviewQuestions": [
+      {
+        "question": "What is LCEL in LangChain and what benefits does it provide?",
+        "answer": "LangChain Expression Language (LCEL) is a declarative syntax using the pipe operator to compose Runnables. It provides uniform streaming, async support, batching, parallel execution, and telemetry out of the box."
+      },
+      {
+        "question": "Difference between BufferMemory and SummaryMemory in LangChain?",
+        "answer": "BufferMemory stores raw past messages in a buffer array (can exceed context window). SummaryMemory uses an LLM to dynamically summarize past context as it grows, keeping token usage flat."
+      }
+    ],
+    "sampleCode": "import { ChatOpenAI } from '@langchain/openai';\nimport { ChatPromptTemplate } from '@langchain/core/prompts';\nimport { StringOutputParser } from '@langchain/core/output_parsers';\n\nconst prompt = ChatPromptTemplate.fromMessages([\n  ['system', 'You are a tech analyst specializing in {topic}.'],\n  ['human', '{input}']\n]);\nconst llm = new ChatOpenAI({ modelName: 'gpt-4o', temperature: 0.7 });\nconst parser = new StringOutputParser();\n\nconst chain = prompt.pipe(llm).pipe(parser);\nconst response = await chain.invoke({ topic: 'AI', input: 'Explain LCEL' });",
+    "bestPractices": [
+      "Use LCEL over legacy chain classes for better streaming and async compatibility",
+      "Always set temperature to low values (0.0 - 0.2) when expecting structured output",
+      "Use BaseOutputParser implementations to validate outputs automatically"
+    ],
+    "commonMistakes": [
+      "Unbounded memory buffers causing context window overflow",
+      "Not handling API error limits inside long chain invocations"
+    ],
+    "references": ["js.langchain.com", "python.langchain.com"],
+    "tags": ["ai", "langchain", "lcel", "llm"]
+  },
+  {
+    "id": "llamaindex",
+    "title": "LlamaIndex Data Ingestion & VectorStoreIndex Architecture",
+    "category": "ai_ml",
+    "keywords": ["llamaindex", "vector store index", "document parsing", "nodes", "retriever query engine", "indexing", "chunking", "knowledge base"],
+    "description": "LlamaIndex is a data framework for LLM applications that provides structured data ingestion, indexing, and retrieval primitives.",
+    "detailedExplanation": "LlamaIndex parses documents into Node chunks, embeds each node using vector embedding models, and constructs searchable indexes (VectorStoreIndex, SummaryIndex, TreeIndex). A RetrieverQueryEngine performs semantic retrieval and response synthesis.",
+    "architectureFlow": "Raw PDF Document -> DocumentReader -> NodeParser (Chunks) -> Embedding Model -> VectorStoreIndex -> RetrieverQueryEngine -> Synthesized Response",
+    "examples": [
+      "PDF Ingestion using SimpleDirectoryReader / PDFReader",
+      "VectorStoreIndex query engine with custom similarityTopK",
+      "SubQuestionQueryEngine for complex multi-document reasoning"
+    ],
+    "interviewQuestions": [
+      {
+        "question": "How does LlamaIndex differ from LangChain?",
+        "answer": "LangChain is a general-purpose framework for building LLM apps (chains, agents, tools). LlamaIndex is specialized specifically for data ingestion, indexing, and advanced RAG retrieval over external documents."
+      }
+    ],
+    "sampleCode": "import { Document, VectorStoreIndex } from 'llamaindex';\n\nconst doc = new Document({ text: 'LlamaIndex simplifies data retrieval for LLMs.' });\nconst index = await VectorStoreIndex.fromDocuments([doc]);\nconst queryEngine = index.asQueryEngine({ similarityTopK: 3 });\nconst response = await queryEngine.query({ query: 'What is LlamaIndex?' });",
+    "bestPractices": [
+      "Use appropriate NodeParser chunk sizes (e.g. 512 - 1024 tokens) matching your document structure",
+      "Persist vector indexes locally or to vector databases to avoid re-embedding files on restart"
+    ],
+    "commonMistakes": [
+      "Parsing huge PDF files synchronously on the main thread causing server freezes"
+    ],
+    "references": ["ts.llamaindex.ai"],
+    "tags": ["ai", "llamaindex", "rag", "vector-store"]
+  },
+  {
+    "id": "crewai_multiagent",
+    "title": "CrewAI Multi-Agent Workflow & Orchestration Patterns",
+    "category": "ai_ml",
+    "keywords": ["crewai", "multi-agent", "agents", "tasks", "crew", "sequential workflow", "hierarchical workflow", "role", "goal", "backstory"],
+    "description": "CrewAI is a framework for orchestrating autonomous multi-agent teams, allowing specialized agents to collaborate sequentially or hierarchically.",
+    "detailedExplanation": "Agents are defined by Role, Goal, Backstory, and Tool access. Tasks specify expected outputs. In a Sequential workflow, Agent 1 completes Task 1 and passes its document output as input context to Agent 2 (e.g., Business Analyst -> Architect -> Developer -> QA).",
+    "architectureFlow": "Project Prompt -> Business Analyst Agent -> System Architect Agent -> Frontend Dev Agent -> Backend Dev Agent -> QA Agent -> Project Summary",
+    "examples": [
+      "Hostel Management System architectural blueprint workflow",
+      "Automated code review & refactoring multi-agent crew",
+      "Market research & content generation crew"
+    ],
+    "interviewQuestions": [
+      {
+        "question": "Explain Sequential vs Hierarchical agent execution in CrewAI.",
+        "answer": "Sequential execution runs agents step-by-step in order, feeding each previous agent's output as context to the next. Hierarchical execution uses a Manager Agent that dynamically delegates tasks to worker agents based on progress."
+      }
+    ],
+    "sampleCode": "// CrewAI Sequential Execution Pattern\nconst agents = [\n  { role: 'Business Analyst', task: 'Define BRD and requirements' },\n  { role: 'System Architect', task: 'Design database and architecture' },\n  { role: 'QA Engineer', task: 'Generate automated test plan' }\n];\n\nlet accumulatedContext = '';\nfor (const agent of agents) {\n  const output = await runAgent(agent, accumulatedContext);\n  accumulatedContext += `\\n\\n[${agent.role} Output]:\\n${output}`;\n}",
+    "bestPractices": [
+      "Give each agent a highly specific backstory and role to enforce specialized behavior",
+      "Set maximum iteration caps to prevent infinite feedback loops between agents",
+      "Keep context window clean by summarizing intermediate agent outputs"
+    ],
+    "commonMistakes": [
+      "Vague agent goals leading to duplicated work between agents"
+    ],
+    "references": ["crewai.com"],
+    "tags": ["ai", "crewai", "agents", "multi-agent"]
+  },
+  {
+    "id": "rag_vector_db_embeddings",
+    "title": "Retrieval-Augmented Generation (RAG), Vector Stores & Embeddings",
+    "category": "ai_ml",
+    "keywords": ["rag", "vector database", "embeddings", "cosine similarity", "pinecone", "chroma", "weaviate", "hnsw", "chunking", "semantic search", "retrieval", "prompt engineering", "tool calling"],
+    "description": "RAG enhances LLM responses by retrieving relevant factual context from vector databases using high-dimensional vector embeddings.",
+    "detailedExplanation": "Text is converted into numerical vector embeddings (e.g. 1536-dimensional float arrays from OpenAI text-embedding-3-small). When a user asks a question, the question is embedded, and Nearest Neighbor Search (Cosine Similarity or HNSW) retrieves top matching chunks to augment the LLM system prompt.",
+    "architectureFlow": "Document -> Chunking -> Embedding Model -> Vector DB -> User Query -> Query Embedding -> Cosine Similarity Search -> Top Chunks -> LLM -> Answer",
+    "examples": [
+      "Cosine Similarity math computation: (A · B) / (||A|| * ||B||)",
+      "Hybrid search combining keyword BM25 and vector semantic search",
+      "Function Calling / Tool Calling with JSON schema tool selection"
+    ],
+    "interviewQuestions": [
+      {
+        "question": "What is Cosine Similarity and how is it used in Vector Search?",
+        "answer": "Cosine similarity measures the cosine of the angle between two vectors in multi-dimensional space, ranging from -1 to 1. In RAG, a similarity score near 1.0 means the query and document chunk share close semantic meaning regardless of length."
+      },
+      {
+        "question": "What is Tool Calling / Function Calling in LLMs?",
+        "answer": "Tool Calling allows LLMs to return structured JSON specifying a tool function to invoke (e.g. calculator(expression)) rather than text, enabling LLMs to interact with external APIs, databases, and code execution environments."
+      }
+    ],
+    "sampleCode": "function cosineSimilarity(a: number[], b: number[]): number {\n  const dot = a.reduce((sum, val, i) => sum + val * b[i], 0);\n  const magA = Math.sqrt(a.reduce((sum, val) => sum + val * val, 0));\n  const magB = Math.sqrt(b.reduce((sum, val) => sum + val * val, 0));\n  return magA && magB ? dot / (magA * magB) : 0;\n}",
+    "bestPractices": [
+      "Use chunk overlap (10-20%) to preserve sentence boundary context",
+      "Re-rank retrieved context using Cross-Encoders (e.g. Cohere Rerank) for highest accuracy",
+      "Low temperature (0.0-0.2) for RAG responses to avoid hallucinating beyond retrieved context"
+    ],
+    "commonMistakes": [
+      "Using wrong embedding model during query retrieval mismatching indexing model",
+      "Extremely large chunk size diluting specific answers"
+    ],
+    "references": ["platform.openai.com/docs/guides/embeddings"],
+    "tags": ["ai", "rag", "vector-db", "embeddings", "tool-calling"]
+  }
+]

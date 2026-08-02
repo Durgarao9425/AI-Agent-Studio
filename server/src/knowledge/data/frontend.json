@@ -1,0 +1,140 @@
+[
+  {
+    "id": "react",
+    "title": "React 19 & Component Architecture",
+    "category": "frontend",
+    "keywords": ["react", "jsx", "hooks", "virtual dom", "useeffect", "usestate", "component", "props", "state", "react 19", "server components", "use", "useactionstate", "useoptimistic"],
+    "description": "React is a popular JavaScript library for building user interfaces based on component-driven architecture and a virtual DOM.",
+    "detailedExplanation": "React 19 introduces Server Components, the new 'use' hook for promise resolution, useActionState for form management, and automatic memoization via the React Compiler. React uses a Virtual DOM to compute diffs (Reconciliation) and batch updates to the real DOM, ensuring 60fps UI performance.",
+    "architectureFlow": "User Action -> State Update -> Component Re-render -> Virtual DOM Diffing (Reconciliation Algorithm) -> Real DOM Mutation Batch Update",
+    "examples": [
+      "Custom hook pattern for data fetching",
+      "Compound component design pattern",
+      "React 19 Actions for form submissions with optimistic updates"
+    ],
+    "interviewQuestions": [
+      {
+        "question": "What is the Virtual DOM and how does React's Reconciliation algorithm work?",
+        "answer": "The Virtual DOM is an in-memory lightweight representation of the real DOM elements. When state changes, React creates a new Virtual DOM tree, compares it with the previous tree using its Fiber reconciliation algorithm (heuristic O(n) diffing), and calculates the minimal set of DOM mutations needed."
+      },
+      {
+        "question": "How do React 19 Server Components differ from Client Components?",
+        "answer": "Server Components execute strictly on the server during request time or build time, sending zero JavaScript bundle overhead to the browser. Client Components execute in the browser and support interactivity (useState, useEffect, event listeners)."
+      }
+    ],
+    "sampleCode": "import { useState, useTransition } from 'react';\n\nexport function DataFilter() {\n  const [query, setQuery] = useState('');\n  const [isPending, startTransition] = useTransition();\n\n  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {\n    startTransition(() => {\n      setQuery(e.target.value);\n    });\n  };\n\n  return (\n    <div className=\"p-4 rounded-xl glass\">\n      <input \n        type=\"text\" \n        onChange={handleSearch} \n        placeholder=\"Filter data...\" \n        className=\"input\"\n      />\n      {isPending && <p className=\"text-xs text-violet-400 mt-2\">Updating list...</p>}\n    </div>\n  );\n}",
+    "bestPractices": [
+      "Keep components small, pure, and focused on a single responsibility",
+      "Use custom hooks to encapsulate reusable stateful logic",
+      "Leverage React 19 Server Components for non-interactive data fetching",
+      "Avoid props drilling by using Context API or Zustand for global state"
+    ],
+    "commonMistakes": [
+      "Mutating state directly instead of using setter functions",
+      "Missing dependency arrays in useEffect causing infinite re-render loops",
+      "Using array indexes as key props on dynamically reordered lists"
+    ],
+    "references": ["react.dev", "github.com/facebook/react"],
+    "tags": ["frontend", "javascript", "react", "ui", "framework"]
+  },
+  {
+    "id": "javascript",
+    "title": "JavaScript ES6+ & Event Loop Mechanics",
+    "category": "frontend",
+    "keywords": ["javascript", "js", "es6", "event loop", "async", "await", "promises", "closures", "prototypes", "hoisting", "scope", "execution context", "call stack", "microtask queue"],
+    "description": "JavaScript is a single-threaded, dynamically-typed programming language that utilizes an event loop for non-blocking asynchronous I/O.",
+    "detailedExplanation": "JavaScript runs on a single thread backed by an Execution Context Call Stack, Web APIs, a Macrotask Queue (setTimeout, I/O), and a Microtask Queue (Promises, process.nextTick). Microtasks take priority and are executed completely before the next macrotask is dequeued.",
+    "architectureFlow": "Call Stack -> Synchronous Execution -> Async Web API -> Callback Pushed to Microtask/Macrotask Queue -> Event Loop Pushes to Call Stack when empty",
+    "examples": [
+      "Creating custom Promises with resolve/reject boundaries",
+      "Closure patterns for module encapsulation",
+      "Async/await exception handling with try/catch blocks"
+    ],
+    "interviewQuestions": [
+      {
+        "question": "Explain the JavaScript Event Loop and Microtask vs Macrotask Queue.",
+        "answer": "The Event Loop continuously checks if the Call Stack is empty. If empty, it executes all pending microtasks (Promise.then, queueMicrotask) before picking the first macrotask (setTimeout, setInterval, I/O)."
+      },
+      {
+        "question": "What is a JavaScript Closure and give a practical use case.",
+        "answer": "A closure is a function bundled together with references to its lexical environment. It allows an inner function to access an outer function's scope even after the outer function has returned. Use case: Data privacy / private variables."
+      }
+    ],
+    "sampleCode": "// Advanced Event Loop & Microtask Example\nconsole.log('1: Sync Start');\n\nsetTimeout(() => console.log('2: Macrotask (Timeout)'), 0);\n\nPromise.resolve().then(() => console.log('3: Microtask (Promise)'));\n\nqueueMicrotask(() => console.log('4: Microtask (queueMicrotask)'));\n\nconsole.log('5: Sync End');\n// Output Order: 1, 5, 3, 4, 2",
+    "bestPractices": [
+      "Always handle Promise rejections using catch or try/catch with async/await",
+      "Use const by default, let when mutation is needed, never var",
+      "Avoid blocking the main event loop with CPU-intensive synchronous operations"
+    ],
+    "commonMistakes": [
+      "Floating promises without error handling leading to unhandledRejection errors",
+      "Modifying global object scope inadvertently"
+    ],
+    "references": ["developer.mozilla.org", "javascript.info"],
+    "tags": ["javascript", "es6", "async", "event-loop"]
+  },
+  {
+    "id": "typescript",
+    "title": "TypeScript Advanced Types & Static Analysis",
+    "category": "frontend",
+    "keywords": ["typescript", "ts", "types", "interfaces", "generics", "utility types", "type inference", "type narrowing", "discriminated unions", "strict mode"],
+    "description": "TypeScript is a strongly-typed superset of JavaScript that compiles to plain JavaScript, adding static type checking to catch errors at build time.",
+    "detailedExplanation": "TypeScript introduces static type analysis, interfaces, generic constraints, conditional types, and mapped types. Features like Discriminated Unions allow pattern matching and safe domain modeling.",
+    "architectureFlow": "TypeScript Source (.ts) -> TSC Compiler -> Type Checking -> AST Transformation -> Clean JavaScript Output (.js)",
+    "examples": [
+      "Generic repository interface design",
+      "Discriminated union type narrowing",
+      "Mapped types for payload validation"
+    ],
+    "interviewQuestions": [
+      {
+        "question": "What are Discriminated Unions in TypeScript?",
+        "answer": "A Discriminated Union (or Tagged Union) is a union of types that share a common literal property (the discriminant tag). TypeScript uses this tag to narrow down the specific type in conditional branches automatically."
+      }
+    ],
+    "sampleCode": "type APIState<T> = \n  | { status: 'idle' }\n  | { status: 'loading' }\n  | { status: 'success'; data: T }\n  | { status: 'error'; error: Error };\n\nfunction renderState<T>(state: APIState<T>): string {\n  switch (state.status) {\n    case 'success': return `Loaded ${JSON.stringify(state.data)}`;\n    case 'error': return `Failed: ${state.error.message}`;\n    default: return 'Processing...';\n  }\n}",
+    "bestPractices": [
+      "Enable strict mode in tsconfig.json (noImplicitAny, strictNullChecks)",
+      "Prefer type inference where obvious, explicitly type function arguments and return types",
+      "Use unknown instead of any for untyped external API payloads"
+    ],
+    "commonMistakes": [
+      "Overusing any which disables type checking safety",
+      "Duplicate code by creating redundant interfaces instead of using utility types like Pick and Partial"
+    ],
+    "references": ["typescriptlang.org"],
+    "tags": ["typescript", "type-safety", "types"]
+  },
+  {
+    "id": "html_css_tailwind",
+    "title": "Modern HTML5, CSS3 & Tailwind CSS Design Systems",
+    "category": "frontend",
+    "keywords": ["html", "css", "tailwind", "tailwind css", "flexbox", "css grid", "responsive", "semantic html", "glassmorphism", "design tokens", "dark mode"],
+    "description": "HTML5 and CSS3 provide structure and styling for modern web apps. Tailwind CSS is a utility-first CSS framework for building custom user interfaces rapidly.",
+    "detailedExplanation": "Tailwind CSS processes CSS utility classes using PostCSS to purge unused styles, resulting in ultra-compact CSS bundles (<10KB). Combined with HTML5 semantic elements and modern CSS Grid/Flexbox layouts, it enables high-performance responsive web interfaces.",
+    "architectureFlow": "Utility Classes in HTML/JSX -> Tailwind JIT Compiler -> CSS Purging -> Minified Production CSS Bundle",
+    "examples": [
+      "Glassmorphic card container with backdrop blur",
+      "Responsive grid layout with Tailwind breakpoints",
+      "Custom color tokens with CSS CSS variables and Tailwind config"
+    ],
+    "interviewQuestions": [
+      {
+        "question": "How does Tailwind CSS JIT (Just-In-Time) compiler work?",
+        "answer": "The JIT compiler scans source files for utility class names on-demand during build/dev time and generates the exact CSS required, eliminating large static CSS files and enabling arbitrary values like top-[12px]."
+      }
+    ],
+    "sampleCode": "<div className=\"grid grid-cols-1 md:grid-cols-3 gap-6 p-6 backdrop-blur-xl bg-slate-900/60 border border-slate-800 rounded-2xl shadow-2xl\">\n  <div className=\"p-4 bg-violet-500/10 border border-violet-500/20 rounded-xl\">\n    <h4 className=\"text-sm font-bold text-violet-400\">Responsive Card</h4>\n  </div>\n</div>",
+    "bestPractices": [
+      "Use semantic HTML elements (header, main, nav, section, article) for accessibility & SEO",
+      "Define standard design tokens in tailwind.config.js for typography, colors, and shadows",
+      "Use clsx / tailwind-merge (cn helper) to conditionally apply utility classes cleanly"
+    ],
+    "commonMistakes": [
+      "Hardcoding static pixel dimensions instead of relative rem / percentage units",
+      "Duplicating complex class strings across components instead of extracting reusable components"
+    ],
+    "references": ["tailwindcss.com", "developer.mozilla.org"],
+    "tags": ["css", "html", "tailwind", "design-system"]
+  }
+]

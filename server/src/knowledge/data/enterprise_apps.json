@@ -1,0 +1,89 @@
+[
+  {
+    "id": "hostel_management_system",
+    "title": "Hostel Management System Architectural Blueprint & Documentation",
+    "category": "enterprise_apps",
+    "keywords": ["hostel management system", "hostel management", "hostel", "student management", "attendance system", "billing", "inventory", "room allocation", "complaints", "mess"],
+    "description": "Complete architectural blueprint, database schema, workflow design, and implementation specification for an Enterprise Hostel Management System.",
+    "detailedExplanation": "A Hostel Management System automates student room allocation, digital out-pass generation, mess attendance tracking, monthly rent/utility billing, complaint ticket management, and inventory tracking across multiple hostel blocks.",
+    "architectureFlow": "Student Portal / Warden Dashboard -> Mobile App / Web Client -> Node.js Express API -> PostgreSQL Database + Redis Cache -> Payment Gateway / SMS Notification Service",
+    "examples": [
+      "Dynamic Room Allocation Engine with capacity validation",
+      "QR-Code Mess Meal Attendance System",
+      "Automated Monthly Billing & Fine Invoice Generation Pipeline"
+    ],
+    "interviewQuestions": [
+      {
+        "question": "How do you design a concurrency-safe Room Allocation system in SQL?",
+        "answer": "Use SELECT FOR UPDATE database row locking during reservation transactions to prevent race conditions where two wardens allocate the last bed in a room simultaneously."
+      },
+      {
+        "question": "What is the database design for managing Student Out-Pass requests with multi-level approval?",
+        "answer": "Create an out_passes table linking student_id, warden_id, status (PENDING, APPROVED, REJECTED, CHECKED_OUT, RETURNED), out_time, in_time, and approval_timestamp logs."
+      }
+    ],
+    "sampleCode": "/**\n * Hostel Room Allocation Controller (TypeScript & SQL)\n */
+export interface RoomAllocationPayload {
+  studentId: string;
+  roomId: string;
+  startDate: string;
+}
+
+export async function allocateRoom(payload: RoomAllocationPayload) {
+  // 1. Begin SQL Transaction
+  // 2. Lock Room Record: SELECT capacity, occupancy FROM rooms WHERE id = payload.roomId FOR UPDATE
+  // 3. Verify occupancy < capacity
+  // 4. Update occupancy: UPDATE rooms SET occupancy = occupancy + 1 WHERE id = payload.roomId
+  // 5. Insert allocation record into allocations table
+  // 6. Commit Transaction
+  return {
+    success: true,
+    allocationId: `alloc_${Date.now()}`,
+    assignedRoom: payload.roomId,
+    studentId: payload.studentId,
+    timestamp: new Date().toISOString()
+  };
+}",
+    "bestPractices": [
+      "Use SQL transactions with SELECT FOR UPDATE row locking during bed allocations to guarantee zero overbooking",
+      "Implement role-based permissions (Student, Warden, Chief Warden, Accounts, Maintenance)",
+      "Maintain complete audit logs for all student check-in / check-out timestamps"
+    ],
+    "commonMistakes": [
+      "Race conditions on room capacity without database-level transactional locks",
+      "Not handling student room transfer edge cases properly"
+    ],
+    "references": ["github.com/enterprise-systems/hostel-management"],
+    "tags": ["hostel", "enterprise", "system-design", "database", "node"]
+  },
+  {
+    "id": "crm_erp_inventory_billing",
+    "title": "Enterprise CRM, ERP, Billing & Inventory Management Suite",
+    "category": "enterprise_apps",
+    "keywords": ["crm", "erp", "inventory", "billing", "attendance system", "student management", "dashboard analytics", "invoicing", "revenue"],
+    "description": "Enterprise Resource Planning (ERP), Customer Relationship Management (CRM), Automated Billing, and Real-Time Inventory Control platform.",
+    "detailedExplanation": "Enterprise suites integrate lead pipelines (CRM), resource allocation (ERP), stock SKU tracking (Inventory), recurring billing engines, and real-time executive dashboard analytics into a unified data architecture.",
+    "architectureFlow": "Sales / Stock Action -> Event Bus -> ERP Engine -> Inventory SKU Adjustment -> Invoice Generator -> Ledger DB -> Real-time Analytics Dashboard",
+    "examples": [
+      "Double-entry bookkeeping ledger transaction service",
+      "Real-time Inventory Low-Stock Trigger Alert System",
+      "SaaS Recurring Subscription Billing Engine with Stripe Webhooks"
+    ],
+    "interviewQuestions": [
+      {
+        "question": "How do you ensure data consistency in an Inventory Billing System?",
+        "answer": "Use atomic database transactions or Event Sourcing. Decrement inventory stock count and write invoice ledger entry within the exact same database transaction block."
+      }
+    ],
+    "sampleCode": "export function calculateInvoiceTotal(items: Array<{ price: number; qty: number; taxRate: number }>) {\n  const subtotal = items.reduce((acc, item) => acc + (item.price * item.qty), 0);\n  const tax = items.reduce((acc, item) => acc + (item.price * item.qty * item.taxRate), 0);\n  return {\n    subtotal: Math.round(subtotal * 100) / 100,\n    tax: Math.round(tax * 100) / 100,\n    total: Math.round((subtotal + tax) * 100) / 100\n  };\n}",
+    "bestPractices": [
+      "Never store currency amounts as floating point numbers — store in integer cents / lowest currency subunit",
+      "Idempotent billing webhooks to prevent charging customers twice"
+    ],
+    "commonMistakes": [
+      "Floating point rounding errors in financial transactions"
+    ],
+    "references": ["martinfowler.com/articles/accounting-patterns.html"],
+    "tags": ["erp", "crm", "billing", "inventory", "enterprise"]
+  }
+]

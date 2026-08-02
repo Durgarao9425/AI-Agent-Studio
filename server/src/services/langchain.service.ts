@@ -1,0 +1,204 @@
+// services/langchain.service.ts — LangChain.js integration.
+// Demonstrates: PromptTemplate, ChatOpenAI LLM, OutputParser, ConversationChain, BufferMemory.
+// Each of these is a core LangChain concept that interviewers will ask about.
+
+import { ChatOpenAI } from '@langchain/openai';
+import { ChatPromptTemplate, HumanMessagePromptTemplate, SystemMessagePromptTemplate } from '@langchain/core/prompts';
+import { StringOutputParser } from '@langchain/core/output_parsers';
+import { BufferMemory } from 'langchain/memory';
+import { ConversationChain } from 'langchain/chains';
+import { metricsService } from './metrics.service';
+import { getActiveApiKey } from './openai.service';
+
+// In-memory store for conversation sessions.
+// Maps sessionId → ConversationChain so memory persists across requests.
+const conversationSessions = new Map<string, ConversationChain>();
+
+/**
+ * runPromptChain — Demonstrates the basic LangChain LCEL (LangChain Expression Language) pattern:
+ *   PromptTemplate | ChatOpenAI | OutputParser
+ * 
+ * This is the "chain" pattern: each component is a Runnable, chained with the pipe operator.
+ */
+export async function runPromptChain(
+  apiKey: string,
+  systemPrompt: string,
+  userPrompt: string,
+  model = 'gpt-4o',
+  temperature = 0.7
+): Promise<{
+  output: string;
+  tokensUsed: number;
+  chain: {
+    promptTemplate: string;
+    llmModel: string;
+    outputParser: string;
+    formattedPrompt: string;
+  };
+}> {
+  const start = Date.now();
+  const resolvedKey = getActiveApiKey(apiKey);
+
+  // 1. PromptTemplate — defines the structure of the prompt with variables
+  const prompt = ChatPromptTemplate.fromMessages([
+    SystemMessagePromptTemplate.fromTemplate(systemPrompt || 'You are a helpful AI assistant.'),
+    HumanMessagePromptTemplate.fromTemplate('{input}'),
+  ]);
+
+  // 2. ChatOpenAI — the LLM component
+  const llm = new ChatOpenAI({
+    openAIApiKey: resolvedKey,
+    modelName: model,
+    temperature,
+  });
+
+  // 3. StringOutputParser — extracts the string content from the LLM response
+  const outputParser = new StringOutputParser();
+
+  // 4. Chain them together using LCEL pipe syntax
+  const chain = prompt.pipe(llm).pipe(outputParser);
+
+  // 5. Invoke the chain
+  const output = await chain.invoke({ input: userPrompt });
+
+  // Format the prompt for visualization (what was actually sent to the LLM)
+  const formattedMessages = await prompt.formatMessages({ input: userPrompt });
+  const formattedPrompt = formattedMessages.map((m) => `[${m._getType()}]: ${m.content}`).join('\n');
+
+  const durationMs = Date.now() - start;
+  // Estimate tokens (LangChain doesn't always expose usage in chain output)
+  const estimatedTokens = Math.ceil((systemPrompt.length + userPrompt.length + output.length) / 4);
+  const cost = metricsService.estimateCost(estimatedTokens, model);
+
+  metricsService.recordActivity({
+    type: 'langchain',
+    label: 'LangChain Prompt Chain',
+    durationMs,
+    tokens: estimatedTokens,
+    cost,
+    status: 'success',
+  });
+
+  return {
+    output,
+    tokensUsed: estimatedTokens,
+    chain: {
+      promptTemplate: `System: ${systemPrompt}\nHuman: {input}`,
+      llmModel: model,
+      outputParser: 'StringOutputParser',
+      formattedPrompt,
+    },
+  };
+}
+
+/**
+ * runConversationChain — Demonstrates LangChain's ConversationChain with BufferMemory.
+ * BufferMemory stores all messages in a buffer and injects them into each prompt.
+ * This is the foundational memory pattern in LangChain.
+ */
+export async function runConversationChain(
+  apiKey: string,
+  sessionId: string,
+  userMessage: string,
+  model = 'gpt-4o',
+  temperature = 0.7
+): Promise<{
+  response: string;
+  memoryContents: string;
+  sessionId: string;
+  messageCount: number;
+}> {
+  // Get or create conversation chain for this session
+  if (!conversationSessions.has(sessionId)) {
+    const llm = new ChatOpenAI({
+      openAIApiKey: getActiveApiKey(apiKey),
+      modelName: model,
+      temperature,
+    });
+
+    // BufferMemory keeps ALL messages — suitable for short conversations
+    const memory = new BufferMemory({
+      returnMessages: false,
+      memoryKey: 'history',
+    });
+
+    const chain = new ConversationChain({ llm, memory });
+    conversationSessions.set(sessionId, chain);
+  }
+
+  const chain = conversationSessions.get(sessionId)!;
+  const result = await chain.call({ input: userMessage });
+
+  // Retrieve memory contents for visualization
+  const memoryVars = await chain.memory!.loadMemoryVariables({});
+  const memoryContents = (memoryVars.history as string) || '';
+  const messageCount = memoryContents.split('\n').filter((l) => l.startsWith('Human:') || l.startsWith('AI:')).length;
+
+  return {
+    response: result.response,
+    memoryContents,
+    sessionId,
+    messageCount,
+  };
+}
+
+/**
+ * clearConversationMemory — Removes a session's memory buffer.
+ * Called when the user clicks "Clear Memory" in the UI.
+ */
+export function clearConversationMemory(sessionId: string): boolean {
+  return conversationSessions.delete(sessionId);
+}
+
+/**
+ * getLangChainDemoExplanation — Returns a structured explanation of LangChain components.
+ * Used by the frontend to render the visual chain diagram.
+ */
+export function getLangChainComponents(): object {
+  return {
+    components: [
+      {
+        id: 'prompt-template',
+        name: 'ChatPromptTemplate',
+        type: 'PromptTemplate',
+        description: 'Defines the structure of messages sent to the LLM. Supports variables like {input} that get substituted at runtime.',
+        color: '#8b5cf6',
+        code: `const prompt = ChatPromptTemplate.fromMessages([\n  SystemMessagePromptTemplate.fromTemplate("You are {role}"),\n  HumanMessagePromptTemplate.fromTemplate("{input}")\n]);`,
+      },
+      {
+        id: 'llm',
+        name: 'ChatOpenAI',
+        type: 'LLM',
+        description: 'The language model component. Wraps OpenAI\'s chat API with LangChain\'s Runnable interface, enabling it to be piped with other components.',
+        color: '#3b82f6',
+        code: `const llm = new ChatOpenAI({\n  modelName: "gpt-4o",\n  temperature: 0.7\n});`,
+      },
+      {
+        id: 'output-parser',
+        name: 'StringOutputParser',
+        type: 'OutputParser',
+        description: 'Extracts the string content from the LLM\'s AIMessage response. Other parsers include JsonOutputParser, StructuredOutputParser.',
+        color: '#10b981',
+        code: `const parser = new StringOutputParser();\n// Converts AIMessage → string`,
+      },
+      {
+        id: 'chain',
+        name: 'LCEL Chain',
+        type: 'Chain',
+        description: 'LangChain Expression Language (LCEL) uses the pipe operator to compose Runnables into a chain. Data flows left to right.',
+        color: '#f59e0b',
+        code: `const chain = prompt.pipe(llm).pipe(parser);\nconst result = await chain.invoke({ input: "Hello" });`,
+      },
+      {
+        id: 'memory',
+        name: 'BufferMemory',
+        type: 'Memory',
+        description: 'Stores conversation history in a buffer. Injected into the prompt on each call via the {history} variable. Other options: SummaryMemory, VectorStoreMemory.',
+        color: '#ef4444',
+        code: `const memory = new BufferMemory({ memoryKey: "history" });\nconst chain = new ConversationChain({ llm, memory });`,
+      },
+    ],
+    flow: ['prompt-template', 'llm', 'output-parser'],
+    memoryFlow: ['memory', 'prompt-template', 'llm', 'output-parser'],
+  };
+}

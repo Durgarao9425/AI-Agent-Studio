@@ -1,0 +1,106 @@
+[
+  {
+    "id": "nodejs_express",
+    "title": "Node.js Architecture & Express API Services",
+    "category": "backend",
+    "keywords": ["node.js", "nodejs", "express", "express.js", "rest api", "middleware", "non-blocking", "event loop", "buffer", "stream", "http"],
+    "description": "Node.js is an open-source, cross-platform JavaScript runtime environment built on V8. Express is a minimal web framework for building RESTful APIs.",
+    "detailedExplanation": "Node.js operates on an event-driven, single-threaded I/O model backed by libuv threadpool for disk/network ops. Express uses a pipeline middleware pattern where incoming HTTP requests pass through functions sequentially before reaching final controllers.",
+    "architectureFlow": "Client HTTP Request -> Express Middleware Stack (Cors, Helmet, Logger, Body Parser) -> Route Handler -> Controller -> Service -> Database -> Response",
+    "examples": [
+      "Global error handler middleware with status code mapping",
+      "Streaming large files using Node.js streams to prevent memory leaks",
+      "Rate limiting middleware with Redis storage"
+    ],
+    "interviewQuestions": [
+      {
+        "question": "What is the difference between process.nextTick() and setImmediate() in Node.js?",
+        "answer": "process.nextTick() executes immediately after the current operation completes, before the event loop continues. setImmediate() executes on the next check phase of the event loop cycle."
+      },
+      {
+        "question": "Explain Express Middleware pattern and next() error propagation.",
+        "answer": "Express middleware functions take (req, res, next). Calling next() passes control to the next middleware. Calling next(err) with an argument jumps directly to the 4-argument error handler middleware."
+      }
+    ],
+    "sampleCode": "import express, { Request, Response, NextFunction } from 'express';\n\nconst app = express();\napp.use(express.json());\n\napp.use((req: Request, _res: Response, next: NextFunction) => {\n  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);\n  next();\n});\n\napp.get('/api/health', (_req: Request, res: Response) => {\n  res.json({ status: 'ok', uptime: process.uptime() });\n});",
+    "bestPractices": [
+      "Always handle uncaught exceptions and unhandled promise rejections gracefully",
+      "Use helmet for security headers and rate limiting to prevent DDOS attacks",
+      "Use environment variables for secret credentials via dotenv or config vaults"
+    ],
+    "commonMistakes": [
+      "Blocking the main thread with heavy synchronous math operations (e.g. JSON.parse of 500MB string)",
+      "Forgetting return after res.json() inside conditional blocks leading to headers already sent error"
+    ],
+    "references": ["nodejs.org", "expressjs.com"],
+    "tags": ["backend", "nodejs", "express", "api"]
+  },
+  {
+    "id": "databases_sql_nosql",
+    "title": "Database Architecture: PostgreSQL, MySQL & MongoDB",
+    "category": "backend",
+    "keywords": ["database", "mongodb", "mysql", "postgresql", "sql", "nosql", "postgres", "indexing", "transactions", "acid", "aggregation", "mongoose"],
+    "description": "Relational (PostgreSQL, MySQL) and Non-Relational (MongoDB) database management systems powering modern data persistence.",
+    "detailedExplanation": "PostgreSQL and MySQL provide ACID compliant relational data structures with B-Tree indexes, foreign keys, and complex SQL joins. MongoDB provides document-oriented JSON/BSON storage ideal for horizontal sharding and flexible schemaless entities.",
+    "architectureFlow": "Query -> Optimizer -> Index Lookup (B-Tree/Hash) -> Buffer Pool Cache -> Storage Disk / WAL Write",
+    "examples": [
+      "PostgreSQL CTE (Common Table Expression) complex analytics query",
+      "MongoDB Aggregation Pipeline ($match, $group, $lookup)",
+      "Database migration scripts with atomic transaction rollbacks"
+    ],
+    "interviewQuestions": [
+      {
+        "question": "What is ACID compliance in SQL databases?",
+        "answer": "ACID stands for Atomicity (all or nothing), Consistency (valid state rules), Isolation (concurrent transactions don't interfere), and Durability (committed data survives crashes)."
+      },
+      {
+        "question": "How do B-Tree indexes improve database read performance?",
+        "answer": "B-Tree indexes maintain sorted pointer structures that allow log(N) lookup time instead of O(N) full table scans, drastically speeding up WHERE and JOIN clauses."
+      }
+    ],
+    "sampleCode": "-- PostgreSQL Query with Window Functions\nSELECT \n    department_id,\n    employee_name,\n    salary,\n    DENSE_RANK() OVER (PARTITION BY department_id ORDER BY salary DESC) as rank\nFROM employees\nWHERE status = 'active';",
+    "bestPractices": [
+      "Index columns used frequently in WHERE, JOIN, and ORDER BY clauses",
+      "Use database connections pooling to avoid connection overhead per request",
+      "Use database migrations for all schema schema changes"
+    ],
+    "commonMistakes": [
+      "N+1 query problem caused by missing eager loads or joins in ORMs",
+      "Missing indexes on foreign key columns"
+    ],
+    "references": ["postgresql.org", "mongodb.com"],
+    "tags": ["backend", "database", "postgres", "mongodb", "sql"]
+  },
+  {
+    "id": "auth_jwt_redis",
+    "title": "Authentication, JWT Security & Redis Caching",
+    "category": "backend",
+    "keywords": ["auth", "authentication", "jwt", "json web token", "redis", "caching", "session", "oauth", "bcrypt", "rbac", "security"],
+    "description": "Stateless and stateful authentication implementations using JSON Web Tokens (JWT), OAuth2, RBAC, and Redis for high-speed caching.",
+    "detailedExplanation": "JWTs contain a base64 encoded header, payload, and cryptographic signature (HMAC-SHA256 or RS256). Redis operates as an in-memory key-value store achieving sub-millisecond read/write speeds, frequently used for session storage, caching, and rate limiting.",
+    "architectureFlow": "Client Login -> Verify Password (Bcrypt) -> Issue Signed Access & Refresh JWT -> Client Stores Token -> Authorized Bearer Header Request",
+    "examples": [
+      "JWT access + refresh token rotation workflow",
+      "Redis Cache-Aside pattern implementation",
+      "Role-Based Access Control (RBAC) middleware"
+    ],
+    "interviewQuestions": [
+      {
+        "question": "How do Access Tokens and Refresh Tokens work together for secure auth?",
+        "answer": "Short-lived Access Tokens (e.g. 15 mins) authenticate requests. Long-lived Refresh Tokens (e.g. 7 days) stored securely in HttpOnly cookies are used to obtain new access tokens without requiring the user to re-log in."
+      }
+    ],
+    "sampleCode": "import jwt from 'jsonwebtoken';\n\nexport function verifyAuthToken(token: string, secret: string) {\n  try {\n    const decoded = jwt.verify(token, secret);\n    return { valid: true, payload: decoded };\n  } catch (err) {\n    return { valid: false, error: 'Token expired or invalid' };\n  }\n}",
+    "bestPractices": [
+      "Never store sensitive passwords in plain text — hash with bcrypt or Argon2",
+      "Store Refresh Tokens in HttpOnly, SameSite, Secure cookies to prevent XSS attacks",
+      "Implement TTL (Time To Live) on all Redis cache keys to prevent memory leaks"
+    ],
+    "commonMistakes": [
+      "Storing JWT secret keys in source code repositories instead of environment variables",
+      "Storing sensitive PII (passwords, credit cards) inside JWT unencrypted payload"
+    ],
+    "references": ["jwt.io", "redis.io"],
+    "tags": ["backend", "security", "jwt", "redis", "auth"]
+  }
+]
