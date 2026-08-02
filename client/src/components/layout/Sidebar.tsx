@@ -31,7 +31,6 @@ const NAV_ITEMS = [
   { path: '/crew', icon: Users, label: 'CrewAI Demo', color: '#10b981' },
   { path: '/langchain', icon: GitBranch, label: 'LangChain', color: '#3b82f6' },
   { path: '/llamaindex', icon: FileSearch, label: 'LlamaIndex', color: '#06b6d4' },
-  { path: '/playground', icon: Sliders, label: 'Playground', color: '#a78bfa' },
   { path: '/timeline', icon: Activity, label: 'Timeline', color: '#67e8f9' },
   { path: '/settings', icon: Settings, label: 'Settings', color: '#8899cc' },
 ];
