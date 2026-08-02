@@ -36,45 +36,54 @@ export function Topbar() {
       style={{ background: 'rgba(10, 15, 30, 0.8)', backdropFilter: 'blur(20px)' }}
     >
       {/* Page Info */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 min-w-0 flex-1 mr-2">
         <button 
           onClick={() => setMobileSidebarOpen(true)}
-          className="md:hidden p-2 -ml-2 rounded-lg text-text-muted hover:text-text-primary hover:bg-white/5 transition-colors"
+          className="md:hidden p-2 -ml-2 rounded-lg text-text-muted hover:text-text-primary hover:bg-white/5 transition-colors flex-shrink-0"
         >
           <Menu size={20} />
         </button>
-        <div>
-          <h1 className="text-text-primary font-semibold text-base leading-none">
+        <div className="min-w-0">
+          <h1 className="text-text-primary font-semibold text-sm sm:text-base leading-none truncate">
             {pageInfo.title}
           </h1>
-          <p className="text-text-muted text-xs mt-0.5">{pageInfo.subtitle}</p>
+          <p className="text-text-muted text-[10px] sm:text-xs mt-0.5 truncate hidden xs:block">
+            {pageInfo.subtitle}
+          </p>
         </div>
       </div>
 
       {/* Right Controls */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 flex-shrink-0">
         {/* Model badge */}
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg glass border border-white/10 text-xs">
+        <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg glass border border-white/10 text-xs">
           <Cpu size={12} className="text-violet-light" />
-          <span className="text-text-secondary">{model}</span>
+          <span className="text-text-secondary truncate max-w-[120px]">{model}</span>
         </div>
 
         {/* API key status */}
         <div className={cn(
-          "flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium border",
+          "flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium border",
           !apiKey || apiKey === 'local-offline-ai-engine' || apiKey === 'demo-mode'
             ? "bg-emerald/10 text-emerald border-emerald/20" 
             : "bg-violet/10 text-violet-light border-violet/20"
         )}>
           <div className={cn(
-            "w-1.5 h-1.5 rounded-full animate-pulse",
+            "w-1.5 h-1.5 rounded-full animate-pulse flex-shrink-0",
             !apiKey || apiKey === 'local-offline-ai-engine' || apiKey === 'demo-mode' ? "bg-emerald" : "bg-violet-light"
           )} />
-          {!apiKey || apiKey === 'local-offline-ai-engine' || apiKey === 'demo-mode' 
-            ? "Local AI Engine (100% Offline)" 
-            : apiKey.startsWith('sk-or-') 
-              ? "OpenRouter Connected (Live)" 
-              : "OpenAI Connected (Live)"}
+          <span className="hidden sm:inline">
+            {!apiKey || apiKey === 'local-offline-ai-engine' || apiKey === 'demo-mode' 
+              ? "Local AI (Offline)" 
+              : apiKey.startsWith('sk-or-') 
+                ? "OpenRouter (Live)" 
+                : "OpenAI (Live)"}
+          </span>
+          <span className="sm:hidden text-[10px]">
+            {!apiKey || apiKey === 'local-offline-ai-engine' || apiKey === 'demo-mode' 
+              ? "Offline" 
+              : "Live"}
+          </span>
         </div>
 
         {/* Notification bell */}
