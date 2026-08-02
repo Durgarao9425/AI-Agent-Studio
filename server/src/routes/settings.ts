@@ -27,15 +27,28 @@ router.post('/validate-key', async (req: Request, res: Response): Promise<void> 
   }
 
   try {
-    const client = new OpenAI({ apiKey });
+    const isOR = apiKey.startsWith('sk-or-');
+    const client = new OpenAI({
+      apiKey,
+      baseURL: isOR ? 'https://openrouter.ai/api/v1' : undefined,
+      defaultHeaders: isOR ? {
+        'HTTP-Referer': 'https://ai-agent-studio-beta.vercel.app',
+        'X-Title': 'AI Agent Studio',
+      } : undefined
+    });
     const models = await client.models.list();
 
     // Filter to only show chat models
     const chatModels = models.data
-      .filter((m) => m.id.includes('gpt') || m.id.includes('o1') || m.id.includes('o3'))
+      .filter((m) => {
+        if (isOR) {
+          return m.id.includes('llama') || m.id.includes('gemma') || m.id.includes('mistral') || m.id.includes('claude') || m.id.includes('gpt') || m.id.includes(':free');
+        }
+        return m.id.includes('gpt') || m.id.includes('o1') || m.id.includes('o3');
+      })
       .map((m) => ({ id: m.id, created: m.created }))
       .sort((a, b) => b.created - a.created)
-      .slice(0, 20);
+      .slice(0, 50);
 
     res.json({ valid: true, models: chatModels });
   } catch (err) {

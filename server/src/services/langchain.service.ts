@@ -45,11 +45,19 @@ export async function runPromptChain(
     HumanMessagePromptTemplate.fromTemplate('{input}'),
   ]);
 
+  const isOR = resolvedKey.startsWith('sk-or-');
   // 2. ChatOpenAI — the LLM component
   const llm = new ChatOpenAI({
     openAIApiKey: resolvedKey,
-    modelName: model,
+    modelName: model || (isOR ? 'meta-llama/llama-3-8b-instruct:free' : 'gpt-4o'),
     temperature,
+    configuration: isOR ? {
+      baseURL: 'https://openrouter.ai/api/v1',
+      defaultHeaders: {
+        'HTTP-Referer': 'https://ai-agent-studio-beta.vercel.app',
+        'X-Title': 'AI Agent Studio',
+      }
+    } : undefined
   });
 
   // 3. StringOutputParser — extracts the string content from the LLM response
@@ -110,10 +118,19 @@ export async function runConversationChain(
 }> {
   // Get or create conversation chain for this session
   if (!conversationSessions.has(sessionId)) {
+    const resolvedKey = getActiveApiKey(apiKey);
+    const isOR = resolvedKey.startsWith('sk-or-');
     const llm = new ChatOpenAI({
-      openAIApiKey: getActiveApiKey(apiKey),
-      modelName: model,
+      openAIApiKey: resolvedKey,
+      modelName: model || (isOR ? 'meta-llama/llama-3-8b-instruct:free' : 'gpt-4o'),
       temperature,
+      configuration: isOR ? {
+        baseURL: 'https://openrouter.ai/api/v1',
+        defaultHeaders: {
+          'HTTP-Referer': 'https://ai-agent-studio-beta.vercel.app',
+          'X-Title': 'AI Agent Studio',
+        }
+      } : undefined
     });
 
     // BufferMemory keeps ALL messages — suitable for short conversations

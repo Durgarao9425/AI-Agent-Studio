@@ -1,15 +1,25 @@
-// services/openai.service.ts — Local Knowledge Engine Service Wrapper.
-// Executes 100% offline using local search & RAG synthesis without external API calls or billing!
-
 import { Message } from '../types';
 import { localKnowledgeEngine } from '../knowledge';
+import OpenAI from 'openai';
 
-export function isRealApiKey(_apiKey?: string): boolean {
-  return true; // Always active in local offline engine mode
+export function isRealApiKey(apiKey?: string): boolean {
+  return !!apiKey && apiKey !== 'demo-mode' && apiKey.trim() !== '';
 }
 
-export function getActiveApiKey(_apiKey?: string): string {
-  return 'local-offline-ai-engine';
+export function getActiveApiKey(apiKey?: string): string {
+  return isRealApiKey(apiKey) ? apiKey! : 'local-offline-ai-engine';
+}
+
+function getOpenAIClient(apiKey: string) {
+  const isOR = apiKey.startsWith('sk-or-');
+  return new OpenAI({
+    apiKey,
+    baseURL: isOR ? 'https://openrouter.ai/api/v1' : undefined,
+    defaultHeaders: isOR ? {
+      'HTTP-Referer': 'https://ai-agent-studio-beta.vercel.app',
+      'X-Title': 'AI Agent Studio',
+    } : undefined
+  });
 }
 
 /**
@@ -35,27 +45,49 @@ function generateLocalVector(text: string): number[] {
 }
 
 /**
- * Chat completion powered by Local RAG Synthesis engine.
+ * Chat completion powered by Local RAG Synthesis engine or real API.
  */
 export async function chatCompletion(
-  _apiKey: string,
+  apiKey: string,
   messages: Message[],
-  _model = 'gpt-4o',
-  _temperature = 0.7,
-  _maxTokens = 2048
+  model = 'gpt-4o',
+  temperature = 0.7,
+  maxTokens = 2048
 ): Promise<{ content: string; tokensUsed: number }> {
-  const lastUserMsg = [...messages].reverse().find((m) => m.role === 'user')?.content || 'Hello';
-  
-  // Use local RAG synthesis
-  const synthesis = localKnowledgeEngine.synthesizeRAGAnswer(lastUserMsg, 3);
-  return {
-    content: synthesis.answer,
-    tokensUsed: synthesis.tokensUsed,
-  };
+  if (!isRealApiKey(apiKey)) {
+    const lastUserMsg = [...messages].reverse().find((m) => m.role === 'user')?.content || 'Hello';
+    
+    // Use local RAG synthesis
+    const synthesis = localKnowledgeEngine.synthesizeRAGAnswer(lastUserMsg, 3);
+    return {
+      content: synthesis.answer,
+      tokensUsed: synthesis.tokensUsed,
+    };
+  }
+
+  try {
+    const client = getOpenAIClient(apiKey);
+    const formattedMessages = messages.map(({ role, content }) => ({ role, content }));
+    
+    const response = await client.chat.completions.create({
+      model: model || (apiKey.startsWith('sk-or-') ? 'meta-llama/llama-3-8b-instruct:free' : 'gpt-4o'),
+      messages: formattedMessages as any,
+      temperature,
+      max_tokens: maxTokens,
+    });
+
+    const content = response.choices[0]?.message?.content || '';
+    const tokensUsed = response.usage?.total_tokens || Math.ceil(content.length / 4);
+
+    return { content, tokensUsed };
+  } catch (err) {
+    console.error('Real API Call failed:', err);
+    throw err;
+  }
 }
 
 /**
- * Streaming response generator with smooth simulated typing animation.
+ * Streaming response generator with smooth simulated typing animation or real API stream.
  */
 export async function* streamChatCompletion(
   apiKey: string,
@@ -64,12 +96,38 @@ export async function* streamChatCompletion(
   temperature = 0.7,
   maxTokens = 2048
 ): AsyncGenerator<string> {
-  const { content } = await chatCompletion(apiKey, messages, model, temperature, maxTokens);
-  const words = content.split(' ');
+  if (!isRealApiKey(apiKey)) {
+    const { content } = await chatCompletion(apiKey, messages, model, temperature, maxTokens);
+    const words = content.split(' ');
 
-  for (const word of words) {
-    yield word + ' ';
-    await new Promise((r) => setTimeout(r, 18)); // Smooth simulated stream
+    for (const word of words) {
+      yield word + ' ';
+      await new Promise((r) => setTimeout(r, 18)); // Smooth simulated stream
+    }
+    return;
+  }
+
+  try {
+    const client = getOpenAIClient(apiKey);
+    const formattedMessages = messages.map(({ role, content }) => ({ role, content }));
+    
+    const stream = await client.chat.completions.create({
+      model: model || (apiKey.startsWith('sk-or-') ? 'meta-llama/llama-3-8b-instruct:free' : 'gpt-4o'),
+      messages: formattedMessages as any,
+      temperature,
+      max_tokens: maxTokens,
+      stream: true,
+    });
+
+    for await (const chunk of stream) {
+      const content = chunk.choices[0]?.delta?.content || '';
+      if (content) {
+        yield content;
+      }
+    }
+  } catch (err) {
+    console.error('Real Stream API Call failed:', err);
+    throw err;
   }
 }
 
