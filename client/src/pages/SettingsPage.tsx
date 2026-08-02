@@ -7,11 +7,20 @@ import { useSettingsStore } from '../store/useSettingsStore';
 import { settingsApi } from '../api';
 import { cn } from '../lib/utils';
 
-const MODELS = [
+const OPENAI_MODELS = [
   { id: 'gpt-4o', name: 'GPT-4o', description: 'Most capable, best for complex tasks', badge: 'Recommended', color: '#7c3aed' },
   { id: 'gpt-4o-mini', name: 'GPT-4o Mini', description: 'Fast and cost-effective', badge: 'Fast', color: '#06b6d4' },
   { id: 'gpt-4.1', name: 'GPT-4.1', description: 'Latest GPT-4 series model', badge: 'New', color: '#10b981' },
   { id: 'gpt-4-turbo', name: 'GPT-4 Turbo', description: 'Powerful with 128K context', badge: null, color: '#f59e0b' },
+];
+
+const OPENROUTER_MODELS = [
+  { id: 'meta-llama/llama-3.1-8b-instruct:free', name: 'Llama 3.1 8B (Free)', description: 'Meta\'s latest model with 128K context', badge: 'Recommended', color: '#10b981' },
+  { id: 'google/gemma-2-9b-it:free', name: 'Gemma 2 9B (Free)', description: 'Google\'s high-performance lightweight model', badge: 'Free', color: '#3b82f6' },
+  { id: 'meta-llama/llama-3-8b-instruct:free', name: 'Llama 3 8B (Free)', description: 'Meta\'s highly capable instruction model', badge: 'Free', color: '#8b5cf6' },
+  { id: 'nvidia/nemotron-4-340b-instruct:free', name: 'Nemotron 4 (Free)', description: 'NVIDIA\'s state-of-the-art synthetic data model', badge: 'Free', color: '#f59e0b' },
+  { id: 'mistralai/mistral-7b-instruct:free', name: 'Mistral 7B (Free)', description: 'High performance small language model', badge: 'Free', color: '#06b6d4' },
+  { id: 'qwen/qwen-2-7b-instruct:free', name: 'Qwen 2 7B (Free)', description: 'Alibaba\'s powerful multilingual model', badge: 'Free', color: '#e11d48' },
 ];
 
 export function SettingsPage() {
@@ -21,6 +30,9 @@ export function SettingsPage() {
   const [validating, setValidating] = useState(false);
   const [validationResult, setValidationResult] = useState<{ valid: boolean; error?: string } | null>({ valid: true });
   const [saved, setSaved] = useState(false);
+
+  const isOR = apiKey.startsWith('sk-or-') || inputKey.startsWith('sk-or-');
+  const modelsList = isOR ? OPENROUTER_MODELS : OPENAI_MODELS;
 
   const validateAndSave = async () => {
     if (!inputKey.trim()) return;
@@ -32,6 +44,16 @@ export function SettingsPage() {
       setValidationResult(result);
       if (result.valid) {
         setApiKey(inputKey);
+        const isORKey = inputKey.startsWith('sk-or-');
+        if (isORKey) {
+          if (!model.includes('/') && !model.includes(':free')) {
+            setModel('meta-llama/llama-3.1-8b-instruct:free');
+          }
+        } else {
+          if (model.includes('/') || model.includes(':free')) {
+            setModel('gpt-4o');
+          }
+        }
         setSaved(true);
         setTimeout(() => setSaved(false), 3000);
       }
@@ -128,7 +150,7 @@ export function SettingsPage() {
                 <AlertCircle size={14} />
               )}
               {validationResult.valid
-                ? '✓ API key is valid. You are connected to OpenAI.'
+                ? `✓ API key is valid. You are connected to ${isOR ? 'OpenRouter' : 'OpenAI'}.`
                 : `✗ ${validationResult.error || 'Invalid API key'}`}
             </motion.div>
           )}
@@ -136,12 +158,12 @@ export function SettingsPage() {
           <p className="text-text-muted text-xs">
             Get your key from{' '}
             <a
-              href="https://platform.openai.com/api-keys"
+              href={isOR ? 'https://openrouter.ai/keys' : 'https://platform.openai.com/api-keys'}
               target="_blank"
               rel="noopener noreferrer"
               className="text-violet-light hover:underline"
             >
-              platform.openai.com/api-keys
+              {isOR ? 'openrouter.ai/keys' : 'platform.openai.com/api-keys'}
             </a>
           </p>
         </div>
@@ -167,7 +189,7 @@ export function SettingsPage() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {MODELS.map((m, i) => (
+          {modelsList.map((m, i) => (
             <motion.button
               key={m.id}
               initial={{ opacity: 0, y: 10 }}

@@ -53,9 +53,21 @@ export function Topbar() {
         </div>
 
         {/* API key status */}
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald/10 text-emerald border border-emerald/20">
-          <div className="w-1.5 h-1.5 rounded-full bg-emerald animate-pulse" />
-          Local AI Engine (100% Offline)
+        <div className={cn(
+          "flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium border",
+          !apiKey || apiKey === 'local-offline-ai-engine' || apiKey === 'demo-mode'
+            ? "bg-emerald/10 text-emerald border-emerald/20" 
+            : "bg-violet/10 text-violet-light border-violet/20"
+        )}>
+          <div className={cn(
+            "w-1.5 h-1.5 rounded-full animate-pulse",
+            !apiKey || apiKey === 'local-offline-ai-engine' || apiKey === 'demo-mode' ? "bg-emerald" : "bg-violet-light"
+          )} />
+          {!apiKey || apiKey === 'local-offline-ai-engine' || apiKey === 'demo-mode' 
+            ? "Local AI Engine (100% Offline)" 
+            : apiKey.startsWith('sk-or-') 
+              ? "OpenRouter Connected (Live)" 
+              : "OpenAI Connected (Live)"}
         </div>
 
         {/* Notification bell */}
