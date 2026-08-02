@@ -4,6 +4,10 @@
 import axios from 'axios';
 import { useSettingsStore } from '../store/useSettingsStore';
 
+export const API_BASE_URL = import.meta.env.PROD 
+  ? 'https://ai-agent-studio-fpjz.onrender.com/api' 
+  : '/api';
+
 /**
  * Creates an axios instance with the current API key in the X-Api-Key header.
  * Called at the start of every API request so it always uses the current key.
@@ -12,7 +16,7 @@ export function createApiClient() {
   const apiKey = useSettingsStore.getState().apiKey;
 
   return axios.create({
-    baseURL: '/api',
+    baseURL: API_BASE_URL,
     headers: {
       'Content-Type': 'application/json',
       'x-api-key': apiKey,

@@ -1,6 +1,6 @@
 // api/index.ts — All typed API functions for every feature
 
-import { api } from './client';
+import { api, API_BASE_URL } from './client';
 import { useSettingsStore } from '../store/useSettingsStore';
 import type {
   Agent,
@@ -87,7 +87,7 @@ export const llamaindexApi = {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('model', useSettingsStore.getState().model);
-    return fetch('/api/llamaindex/index', {
+    return fetch(`${API_BASE_URL}/llamaindex/index`, {
       method: 'POST',
       headers: { 'x-api-key': useSettingsStore.getState().apiKey },
       body: formData,
@@ -169,7 +169,7 @@ export const metricsApi = {
 // ─── Settings API ─────────────────────────────────────────────────────────────
 export const settingsApi = {
   validateKey: (apiKey: string) =>
-    fetch('/api/settings/validate-key', {
+    fetch(`${API_BASE_URL}/settings/validate-key`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey },
     }).then((r) => r.json() as Promise<{ valid: boolean; models?: unknown[]; error?: string }>),
