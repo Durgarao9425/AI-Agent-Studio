@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
-import { Bell, Cpu } from 'lucide-react';
+import { Bell, Cpu, Menu } from 'lucide-react';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { cn } from '../../lib/utils';
 
@@ -14,7 +14,6 @@ const PAGE_TITLES: Record<string, { title: string; subtitle: string }> = {
   '/crew': { title: 'CrewAI Demo', subtitle: 'Multi-agent sequential workflow' },
   '/langchain': { title: 'LangChain Demo', subtitle: 'Chains, memory, and prompt templates' },
   '/llamaindex': { title: 'LlamaIndex Demo', subtitle: 'Document indexing and Q&A' },
-  '/rag': { title: 'RAG Visualization', subtitle: 'Retrieval-Augmented Generation pipeline' },
   '/playground': { title: 'Prompt Playground', subtitle: 'Experiment with prompts and parameters' },
   '/timeline': { title: 'Activity Timeline', subtitle: 'All AI actions and events' },
   '/settings': { title: 'Settings', subtitle: 'Configure API keys and model preferences' },
@@ -22,7 +21,7 @@ const PAGE_TITLES: Record<string, { title: string; subtitle: string }> = {
 
 export function Topbar() {
   const location = useLocation();
-  const { model, apiKey, isConfigured } = useSettingsStore();
+  const { model, apiKey, setMobileSidebarOpen } = useSettingsStore();
 
   const pageInfo = PAGE_TITLES[location.pathname] || {
     title: 'AI Agent Studio',
@@ -37,11 +36,19 @@ export function Topbar() {
       style={{ background: 'rgba(10, 15, 30, 0.8)', backdropFilter: 'blur(20px)' }}
     >
       {/* Page Info */}
-      <div>
-        <h1 className="text-text-primary font-semibold text-base leading-none">
-          {pageInfo.title}
-        </h1>
-        <p className="text-text-muted text-xs mt-0.5">{pageInfo.subtitle}</p>
+      <div className="flex items-center gap-3">
+        <button 
+          onClick={() => setMobileSidebarOpen(true)}
+          className="md:hidden p-2 -ml-2 rounded-lg text-text-muted hover:text-text-primary hover:bg-white/5 transition-colors"
+        >
+          <Menu size={20} />
+        </button>
+        <div>
+          <h1 className="text-text-primary font-semibold text-base leading-none">
+            {pageInfo.title}
+          </h1>
+          <p className="text-text-muted text-xs mt-0.5">{pageInfo.subtitle}</p>
+        </div>
       </div>
 
       {/* Right Controls */}

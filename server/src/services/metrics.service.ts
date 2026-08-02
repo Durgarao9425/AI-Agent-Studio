@@ -7,50 +7,22 @@ import { ActivityEntry, MetricsSnapshot } from '../types';
 
 class MetricsService {
   private activities: ActivityEntry[] = [];
-  private totalRequests = 25480;
-  private totalDurationMs = 73892000; // ~2.9s avg
-  private totalTokens = 18450200;
-  private estimatedCostUSD = 92.25;
+  private totalRequests = 0;
+  private totalDurationMs = 0; // ~2.9s avg
+  private totalTokens = 0;
+  private estimatedCostUSD = 0;
   private agentsUsed: Record<string, number> = {
-    'software-engineer': 1420,
-    'frontend-developer': 1180,
-    'code-reviewer': 960,
-    'system-architect': 840,
-    'business-analyst': 620,
-    'qa-engineer': 480,
+    'software-engineer': 0,
+    'frontend-developer': 0,
+    'code-reviewer': 0,
+    'system-architect': 0,
+    'business-analyst': 0,
+    'qa-engineer': 0,
   };
-  private documentsIndexed = 1240;
+  private documentsIndexed = 0;
 
   constructor() {
-    this.seedBaselineActivities();
-  }
-
-  private seedBaselineActivities(): void {
-    const seedTypes: ActivityEntry['type'][] = ['chat', 'tool', 'crew', 'rag', 'llamaindex', 'langchain', 'playground'];
-    const seedLabels = [
-      'Chat query on React 19 Server Components',
-      'Tool Execution: SQL Generator for Hostel Management',
-      'CrewAI Workflow: Hostel Management System Architecture',
-      'RAG Vector Search: LangChain LCEL Documentation',
-      'LlamaIndex Query: Cosine Similarity Scoring',
-      'LangChain Chain: ChatPromptTemplate | ChatOpenAI | StringOutputParser',
-      'Playground Parameter Comparison: temp=0.2 vs temp=0.8',
-    ];
-
-    for (let i = 0; i < 25; i++) {
-      const type = seedTypes[i % seedTypes.length];
-      const label = seedLabels[i % seedLabels.length];
-      this.activities.push({
-        id: uuidv4(),
-        type,
-        label,
-        durationMs: Math.floor(Math.random() * 800) + 200,
-        tokens: Math.floor(Math.random() * 600) + 150,
-        cost: Math.round((Math.random() * 0.005 + 0.001) * 10000) / 10000,
-        status: 'success',
-        timestamp: new Date(Date.now() - i * 180000).toISOString(),
-      });
-    }
+    // Start completely clean with real session data
   }
 
   recordRequest(data: { path: string; method: string; statusCode: number; durationMs: number }): void {
@@ -91,20 +63,55 @@ class MetricsService {
   }
 
   getSnapshot(): MetricsSnapshot {
-    const hours = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00'];
-    const requestsOverTime = hours.map((hour, i) => ({ hour, count: 2100 + i * 350 }));
-    const tokensOverTime = hours.map((hour, i) => ({ hour, tokens: 140000 + i * 25000 }));
-    const costPerModel = [
-      { model: 'gpt-4o', cost: 68.4 },
-      { model: 'gpt-4o-mini', cost: 14.2 },
-      { model: 'gpt-4.1', cost: 9.65 },
-    ];
+    const activityMap = new Map<string, { count: number; tokens: number }>();
+    
+    // Create base timeline slots for the dashboard chart to look good
+    const hours = ['10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'];
+    hours.forEach(h => activityMap.set(h, { count: 0, tokens: 0 }));
+
+    this.activities.forEach((act) => {
+      const date = new Date(act.timestamp);
+      const hourStr = `${String(date.getHours()).padStart(2, '0')}:00`;
+      if (activityMap.has(hourStr)) {
+        const val = activityMap.get(hourStr)!;
+        val.count++;
+        val.tokens += act.tokens || 0;
+      } else {
+        activityMap.set(hourStr, { count: 1, tokens: act.tokens || 0 });
+      }
+    });
+
+    const sortedHours = Array.from(activityMap.keys()).sort();
+    const requestsOverTime = sortedHours.map(hour => ({
+      hour,
+      count: activityMap.get(hour)!.count
+    }));
+    const tokensOverTime = sortedHours.map(hour => ({
+      hour,
+      tokens: activityMap.get(hour)!.tokens
+    }));
+
+    const modelCostMap = new Map<string, number>();
+    this.activities.forEach((act) => {
+      // Record cost by model if defined
+      const m = (act.metadata?.model as string) || 'meta-llama/llama-3.1-8b-instruct:free';
+      modelCostMap.set(m, (modelCostMap.get(m) || 0) + (act.cost || 0));
+    });
+    
+    const costPerModel = Array.from(modelCostMap.entries()).map(([model, cost]) => ({
+      model,
+      cost: Math.round(cost * 10000) / 10000
+    }));
+
+    if (costPerModel.length === 0) {
+      costPerModel.push({ model: 'No Model Used', cost: 0 });
+    }
 
     return {
       totalRequests: this.totalRequests,
-      avgResponseTimeMs: Math.round(this.totalDurationMs / this.totalRequests),
+      avgResponseTimeMs: this.totalRequests ? Math.round(this.totalDurationMs / this.totalRequests) : 0,
       totalTokens: this.totalTokens,
-      estimatedCostUSD: Math.round(this.estimatedCostUSD * 100) / 100,
+      estimatedCostUSD: Math.round(this.estimatedCostUSD * 10000) / 10000,
       agentsUsed: this.agentsUsed,
       documentsIndexed: this.documentsIndexed,
       requestsOverTime,

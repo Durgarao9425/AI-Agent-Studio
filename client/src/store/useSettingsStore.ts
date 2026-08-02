@@ -10,6 +10,10 @@ interface SettingsStore extends AppSettings {
   setApiKey: (key: string) => void;
   setModel: (model: string) => void;
   isConfigured: () => boolean;
+  mobileSidebarOpen: boolean;
+  setMobileSidebarOpen: (open: boolean) => void;
+  collapsed: boolean;
+  setCollapsed: (collapsed: boolean) => void;
 }
 
 export const useSettingsStore = create<SettingsStore>()(
@@ -18,9 +22,13 @@ export const useSettingsStore = create<SettingsStore>()(
       apiKey: 'local-offline-ai-engine',
       model: 'gpt-4o',
       theme: 'dark',
+      mobileSidebarOpen: false,
+      collapsed: false,
 
       setApiKey: (key: string) => set({ apiKey: key }),
       setModel: (model: string) => set({ model }),
+      setMobileSidebarOpen: (open: boolean) => set({ mobileSidebarOpen: open }),
+      setCollapsed: (collapsed: boolean) => set({ collapsed }),
 
       isConfigured: () => true,
     }),

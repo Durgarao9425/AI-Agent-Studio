@@ -5,18 +5,33 @@ import { ReactNode } from 'react';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 import { motion } from 'framer-motion';
+import { useSettingsStore } from '../../store/useSettingsStore';
+import { cn } from '../../lib/utils';
 
 interface LayoutProps {
   children: ReactNode;
 }
 
 export function Layout({ children }: LayoutProps) {
+  const { collapsed, mobileSidebarOpen, setMobileSidebarOpen } = useSettingsStore();
+
   return (
-    <div className="min-h-screen flex" style={{ background: '#0a0f1e' }}>
+    <div className="min-h-screen flex relative overflow-x-hidden" style={{ background: '#0a0f1e' }}>
+      {/* Mobile Sidebar backdrop */}
+      {mobileSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 z-40 md:hidden backdrop-blur-sm"
+          onClick={() => setMobileSidebarOpen(false)}
+        />
+      )}
+
       <Sidebar />
 
-      {/* Main content — offset by sidebar width */}
-      <div className="flex-1 flex flex-col ml-[260px] min-w-0 min-h-screen relative z-10">
+      {/* Main content — dynamic offset by sidebar width */}
+      <div className={cn(
+        "flex-1 flex flex-col min-w-0 min-h-screen relative z-10 transition-all duration-300",
+        collapsed ? "md:pl-[72px]" : "md:pl-[260px]"
+      )}>
         <Topbar />
         <motion.main
           initial={{ opacity: 0, y: 8 }}

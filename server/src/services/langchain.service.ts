@@ -8,7 +8,7 @@ import { StringOutputParser } from '@langchain/core/output_parsers';
 import { BufferMemory } from 'langchain/memory';
 import { ConversationChain } from 'langchain/chains';
 import { metricsService } from './metrics.service';
-import { getActiveApiKey } from './openai.service';
+import { getActiveApiKey, isRealApiKey } from './openai.service';
 
 // In-memory store for conversation sessions.
 // Maps sessionId → ConversationChain so memory persists across requests.
@@ -46,28 +46,36 @@ export async function runPromptChain(
   ]);
 
   const isOR = resolvedKey.startsWith('sk-or-');
-  // 2. ChatOpenAI — the LLM component
-  const llm = new ChatOpenAI({
-    openAIApiKey: resolvedKey,
-    modelName: model || (isOR ? 'meta-llama/llama-3-8b-instruct:free' : 'gpt-4o'),
-    temperature,
-    configuration: isOR ? {
-      baseURL: 'https://openrouter.ai/api/v1',
-      defaultHeaders: {
-        'HTTP-Referer': 'https://ai-agent-studio-beta.vercel.app',
-        'X-Title': 'AI Agent Studio',
-      }
-    } : undefined
-  });
+  const isReal = isRealApiKey(apiKey);
 
-  // 3. StringOutputParser — extracts the string content from the LLM response
-  const outputParser = new StringOutputParser();
+  let output: string;
 
-  // 4. Chain them together using LCEL pipe syntax
-  const chain = prompt.pipe(llm).pipe(outputParser);
+  if (isReal) {
+    // 2. ChatOpenAI — the LLM component
+    const llm = new ChatOpenAI({
+      openAIApiKey: resolvedKey,
+      modelName: model || (isOR ? 'meta-llama/llama-3-8b-instruct:free' : 'gpt-4o'),
+      temperature,
+      configuration: isOR ? {
+        baseURL: 'https://openrouter.ai/api/v1',
+        defaultHeaders: {
+          'HTTP-Referer': 'https://ai-agent-studio-beta.vercel.app',
+          'X-Title': 'AI Agent Studio',
+        }
+      } : undefined
+    });
 
-  // 5. Invoke the chain
-  const output = await chain.invoke({ input: userPrompt });
+    // 3. StringOutputParser — extracts the string content from the LLM response
+    const outputParser = new StringOutputParser();
+
+    // 4. Chain them together using LCEL pipe syntax
+    const chain = prompt.pipe(llm).pipe(outputParser);
+
+    // 5. Invoke the chain
+    output = await chain.invoke({ input: userPrompt });
+  } else {
+    output = `[Demo Mode] Successfully executed the LangChain LCEL prompt chain!\n\nSystem Prompt Rules: "${systemPrompt || 'None'}"\nUser Input: "${userPrompt}"\n\nThis is a simulated output returned by the offline demo engine. Enter a real API key in settings to connect live.`;
+  }
 
   // Format the prompt for visualization (what was actually sent to the LLM)
   const formattedMessages = await prompt.formatMessages({ input: userPrompt });
@@ -116,6 +124,25 @@ export async function runConversationChain(
   sessionId: string;
   messageCount: number;
 }> {
+  const isReal = isRealApiKey(apiKey);
+
+  if (!isReal) {
+    const sessionHistoryKey = `history:${sessionId}`;
+    const currentHistory = (global as any)[sessionHistoryKey] || '';
+    const newResponse = `[Demo Mode] Hello! I received your message: "${userMessage}". This conversation history is preserved in local server state.`;
+    const updatedHistory = `${currentHistory}Human: ${userMessage}\nAI: ${newResponse}\n`;
+    (global as any)[sessionHistoryKey] = updatedHistory;
+
+    const messageCount = updatedHistory.split('\n').filter((l: string) => l.startsWith('Human:') || l.startsWith('AI:')).length;
+
+    return {
+      response: newResponse,
+      memoryContents: updatedHistory,
+      sessionId,
+      messageCount,
+    };
+  }
+
   // Get or create conversation chain for this session
   if (!conversationSessions.has(sessionId)) {
     const resolvedKey = getActiveApiKey(apiKey);

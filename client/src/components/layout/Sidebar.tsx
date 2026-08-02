@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '../../lib/utils';
+import { useSettingsStore } from '../../store/useSettingsStore';
 
 const NAV_ITEMS = [
   { path: '/', icon: LayoutDashboard, label: 'Dashboard', color: '#7c3aed' },
@@ -30,21 +31,23 @@ const NAV_ITEMS = [
   { path: '/crew', icon: Users, label: 'CrewAI Demo', color: '#10b981' },
   { path: '/langchain', icon: GitBranch, label: 'LangChain', color: '#3b82f6' },
   { path: '/llamaindex', icon: FileSearch, label: 'LlamaIndex', color: '#06b6d4' },
-  { path: '/rag', icon: Database, label: 'RAG Pipeline', color: '#f43f5e' },
   { path: '/playground', icon: Sliders, label: 'Playground', color: '#a78bfa' },
   { path: '/timeline', icon: Activity, label: 'Timeline', color: '#67e8f9' },
   { path: '/settings', icon: Settings, label: 'Settings', color: '#8899cc' },
 ];
 
 export function Sidebar() {
-  const [collapsed, setCollapsed] = useState(false);
+  const { collapsed, setCollapsed, mobileSidebarOpen, setMobileSidebarOpen } = useSettingsStore();
   const location = useLocation();
 
   return (
     <motion.aside
       animate={{ width: collapsed ? 72 : 260 }}
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-      className="fixed left-0 top-0 h-screen z-50 flex flex-col overflow-hidden shadow-2xl"
+      className={cn(
+        "fixed left-0 top-0 h-screen z-50 flex flex-col overflow-hidden shadow-2xl transition-transform duration-300",
+        mobileSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+      )}
       style={{
         background: '#0d1224',
         borderRight: '1px solid rgba(30, 42, 74, 0.8)',
@@ -80,7 +83,7 @@ export function Sidebar() {
               : location.pathname.startsWith(item.path);
 
           return (
-            <NavLink key={item.path} to={item.path}>
+            <NavLink key={item.path} to={item.path} onClick={() => setMobileSidebarOpen(false)}>
               <motion.div
                 whileHover={{ x: collapsed ? 0 : 4 }}
                 whileTap={{ scale: 0.97 }}
