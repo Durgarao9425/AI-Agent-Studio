@@ -4,9 +4,7 @@
 import axios from 'axios';
 import { useSettingsStore } from '../store/useSettingsStore';
 
-export const API_BASE_URL = import.meta.env.PROD 
-  ? 'https://ai-agent-studio-fpjz.onrender.com/api' 
-  : '/api';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 /**
  * Creates an axios instance with the current API key in the X-Api-Key header.
