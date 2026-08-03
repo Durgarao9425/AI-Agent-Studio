@@ -23,6 +23,13 @@ const OPENROUTER_MODELS = [
   { id: 'qwen/qwen-2-7b-instruct:free', name: 'Qwen 2 7B (Free)', description: 'Alibaba\'s powerful multilingual model', badge: 'Free', color: '#e11d48' },
 ];
 
+const GEMINI_MODELS = [
+  { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', description: 'Fast, lightweight and highly capable', badge: 'Recommended', color: '#0ea5e9' },
+  { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro', description: 'Exceptional reasoning and multimodal tasks', badge: 'Powerful', color: '#6366f1' },
+  { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash', description: 'Next-gen speed and efficiency', badge: 'New', color: '#10b981' },
+  { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', description: 'Advanced speed and capabilities', badge: 'Latest', color: '#8b5cf6' },
+];
+
 export function SettingsPage() {
   const { apiKey, model, setApiKey, setModel } = useSettingsStore();
   const [inputKey, setInputKey] = useState(apiKey);
@@ -31,8 +38,9 @@ export function SettingsPage() {
   const [validationResult, setValidationResult] = useState<{ valid: boolean; error?: string } | null>({ valid: true });
   const [saved, setSaved] = useState(false);
 
-  const isOR = apiKey.startsWith('sk-or-') || inputKey.startsWith('sk-or-');
-  const modelsList = isOR ? OPENROUTER_MODELS : OPENAI_MODELS;
+  const isOR = inputKey.startsWith('sk-or-');
+  const isGemini = inputKey && !inputKey.startsWith('sk-') && !isOR && inputKey !== 'demo-mode' && inputKey !== 'local-offline-ai-engine';
+  const modelsList = isOR ? OPENROUTER_MODELS : isGemini ? GEMINI_MODELS : OPENAI_MODELS;
 
   const validateAndSave = async () => {
     if (!inputKey.trim()) return;
@@ -45,12 +53,17 @@ export function SettingsPage() {
       if (result.valid) {
         setApiKey(inputKey);
         const isORKey = inputKey.startsWith('sk-or-');
+        const isGeminiKey = inputKey && !inputKey.startsWith('sk-') && !isORKey && inputKey !== 'demo-mode' && inputKey !== 'local-offline-ai-engine';
         if (isORKey) {
           if (!model.includes('/') && !model.includes(':free')) {
             setModel('meta-llama/llama-3.1-8b-instruct:free');
           }
+        } else if (isGeminiKey) {
+          if (!model.startsWith('gemini-')) {
+            setModel('gemini-1.5-flash');
+          }
         } else {
-          if (model.includes('/') || model.includes(':free')) {
+          if (model.includes('/') || model.includes(':free') || model.startsWith('gemini-')) {
             setModel('gpt-4o');
           }
         }
@@ -63,12 +76,6 @@ export function SettingsPage() {
       setValidating(false);
     }
   };
-
-  const maskedKey = inputKey
-    ? showKey
-      ? inputKey
-      : inputKey.slice(0, 7) + '•'.repeat(Math.min(20, inputKey.length - 7)) + inputKey.slice(-4)
-    : '';
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -88,7 +95,7 @@ export function SettingsPage() {
             <Key size={18} className="text-violet-light" />
           </div>
           <div>
-            <h3 className="font-semibold text-text-primary">OpenAI API Key</h3>
+            <h3 className="font-semibold text-text-primary">API Key Configuration</h3>
             <p className="text-text-muted text-xs mt-0.5">
               Your key is stored locally and never sent to our servers
             </p>
@@ -105,7 +112,7 @@ export function SettingsPage() {
                   setInputKey(e.target.value);
                   setValidationResult(null);
                 }}
-                placeholder="sk-proj-..."
+                placeholder="Enter API Key (sk-..., sk-or-..., or Gemini key)"
                 className="input pr-10 font-mono text-sm"
               />
               <button
@@ -150,21 +157,41 @@ export function SettingsPage() {
                 <AlertCircle size={14} />
               )}
               {validationResult.valid
-                ? `✓ API key is valid. You are connected to ${isOR ? 'OpenRouter' : 'OpenAI'}.`
-                : `✗ ${validationResult.error || 'Invalid API key'}`}
+                ? `✓ API key is valid. You are connected to ${isOR ? 'OpenRouter' : isGemini ? 'Gemini' : 'OpenAI'}.`
+                : `✗ ${validationResult.error || 'Validation failed'}`}
             </motion.div>
           )}
 
           <p className="text-text-muted text-xs">
             Get your key from{' '}
-            <a
-              href={isOR ? 'https://openrouter.ai/keys' : 'https://platform.openai.com/api-keys'}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-violet-light hover:underline"
-            >
-              {isOR ? 'openrouter.ai/keys' : 'platform.openai.com/api-keys'}
-            </a>
+            {isOR ? (
+              <a
+                href="https://openrouter.ai/keys"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-violet-light hover:underline"
+              >
+                openrouter.ai/keys
+              </a>
+            ) : isGemini ? (
+              <a
+                href="https://aistudio.google.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-violet-light hover:underline"
+              >
+                aistudio.google.com
+              </a>
+            ) : (
+              <a
+                href="https://platform.openai.com/api-keys"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-violet-light hover:underline"
+              >
+                platform.openai.com/api-keys
+              </a>
+            )}
           </p>
         </div>
       </motion.div>
@@ -183,7 +210,7 @@ export function SettingsPage() {
           <div>
             <h3 className="font-semibold text-text-primary">Model Selection</h3>
             <p className="text-text-muted text-xs mt-0.5">
-              Choose the OpenAI model for all AI operations
+              Choose the active model for all AI operations
             </p>
           </div>
         </div>

@@ -66,18 +66,30 @@ export function Topbar() {
           "flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium border",
           !apiKey || apiKey === 'local-offline-ai-engine' || apiKey === 'demo-mode'
             ? "bg-emerald/10 text-emerald border-emerald/20" 
-            : "bg-violet/10 text-violet-light border-violet/20"
+            : apiKey.startsWith('sk-or-')
+              ? "bg-violet/10 text-violet-light border-violet/20"
+              : (!apiKey.startsWith('sk-') && !apiKey.startsWith('sk-or-'))
+                ? "bg-cyan/10 text-cyan border-cyan/20"
+                : "bg-violet/10 text-violet-light border-violet/20"
         )}>
           <div className={cn(
             "w-1.5 h-1.5 rounded-full animate-pulse flex-shrink-0",
-            !apiKey || apiKey === 'local-offline-ai-engine' || apiKey === 'demo-mode' ? "bg-emerald" : "bg-violet-light"
+            !apiKey || apiKey === 'local-offline-ai-engine' || apiKey === 'demo-mode'
+              ? "bg-emerald"
+              : apiKey.startsWith('sk-or-')
+                ? "bg-violet-light"
+                : (!apiKey.startsWith('sk-') && !apiKey.startsWith('sk-or-'))
+                  ? "bg-cyan"
+                  : "bg-violet-light"
           )} />
           <span className="hidden sm:inline">
             {!apiKey || apiKey === 'local-offline-ai-engine' || apiKey === 'demo-mode' 
               ? "Local AI (Offline)" 
               : apiKey.startsWith('sk-or-') 
                 ? "OpenRouter (Live)" 
-                : "OpenAI (Live)"}
+                : (!apiKey.startsWith('sk-') && !apiKey.startsWith('sk-or-'))
+                  ? "Gemini (Live)"
+                  : "OpenAI (Live)"}
           </span>
           <span className="sm:hidden text-[10px]">
             {!apiKey || apiKey === 'local-offline-ai-engine' || apiKey === 'demo-mode' 

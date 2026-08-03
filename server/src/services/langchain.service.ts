@@ -8,7 +8,7 @@ import { StringOutputParser } from '@langchain/core/output_parsers';
 import { BufferMemory } from 'langchain/memory';
 import { ConversationChain } from 'langchain/chains';
 import { metricsService } from './metrics.service';
-import { getActiveApiKey, isRealApiKey } from './openai.service';
+import { getActiveApiKey, isRealApiKey, isGeminiApiKey } from './openai.service';
 
 // In-memory store for conversation sessions.
 // Maps sessionId → ConversationChain so memory persists across requests.
@@ -46,16 +46,32 @@ export async function runPromptChain(
   ]);
 
   const isOR = resolvedKey.startsWith('sk-or-');
+  const isGemini = isGeminiApiKey(resolvedKey);
   const isReal = isRealApiKey(apiKey);
 
   let output: string;
 
   if (isReal) {
     try {
+      let selectedModel = model;
+      if (isGemini) {
+        if (!selectedModel || selectedModel.startsWith('gpt-') || selectedModel.startsWith('o1') || selectedModel.startsWith('o3')) {
+          selectedModel = 'gemini-1.5-flash';
+        }
+      } else if (isOR) {
+        if (!selectedModel || selectedModel.startsWith('gpt-') || selectedModel.startsWith('o1') || selectedModel.startsWith('o3')) {
+          selectedModel = 'meta-llama/llama-3-8b-instruct:free';
+        }
+      } else {
+        if (!selectedModel) {
+          selectedModel = 'gpt-4o';
+        }
+      }
+
       // 2. ChatOpenAI — the LLM component
       const llm = new ChatOpenAI({
         openAIApiKey: resolvedKey,
-        modelName: model || (isOR ? 'meta-llama/llama-3-8b-instruct:free' : 'gpt-4o'),
+        modelName: selectedModel,
         temperature,
         maxTokens: 512, // Limit maximum output tokens to prevent 402 cost-ceiling errors on OpenRouter
         configuration: isOR ? {
@@ -64,6 +80,8 @@ export async function runPromptChain(
             'HTTP-Referer': 'https://ai-agent-studio-beta.vercel.app',
             'X-Title': 'AI Agent Studio',
           }
+        } : isGemini ? {
+          baseURL: 'https://generativelanguage.googleapis.com/v1beta/openai/',
         } : undefined
       });
 
@@ -153,9 +171,26 @@ export async function runConversationChain(
   if (!conversationSessions.has(sessionId)) {
     const resolvedKey = getActiveApiKey(apiKey);
     const isOR = resolvedKey.startsWith('sk-or-');
+    const isGemini = isGeminiApiKey(resolvedKey);
+
+    let selectedModel = model;
+    if (isGemini) {
+      if (!selectedModel || selectedModel.startsWith('gpt-') || selectedModel.startsWith('o1') || selectedModel.startsWith('o3')) {
+        selectedModel = 'gemini-1.5-flash';
+      }
+    } else if (isOR) {
+      if (!selectedModel || selectedModel.startsWith('gpt-') || selectedModel.startsWith('o1') || selectedModel.startsWith('o3')) {
+        selectedModel = 'meta-llama/llama-3-8b-instruct:free';
+      }
+    } else {
+      if (!selectedModel) {
+        selectedModel = 'gpt-4o';
+      }
+    }
+
     const llm = new ChatOpenAI({
       openAIApiKey: resolvedKey,
-      modelName: model || (isOR ? 'meta-llama/llama-3-8b-instruct:free' : 'gpt-4o'),
+      modelName: selectedModel,
       temperature,
       maxTokens: 512, // Limit maximum output tokens to prevent 402 cost-ceiling errors on OpenRouter
       configuration: isOR ? {
@@ -164,6 +199,8 @@ export async function runConversationChain(
           'HTTP-Referer': 'https://ai-agent-studio-beta.vercel.app',
           'X-Title': 'AI Agent Studio',
         }
+      } : isGemini ? {
+        baseURL: 'https://generativelanguage.googleapis.com/v1beta/openai/',
       } : undefined
     });
 

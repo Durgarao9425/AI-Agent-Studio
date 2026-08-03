@@ -6,15 +6,24 @@ export function isRealApiKey(apiKey?: string): boolean {
   return !!apiKey && apiKey !== 'demo-mode' && apiKey.trim() !== '';
 }
 
+export function isGeminiApiKey(apiKey?: string): boolean {
+  return isRealApiKey(apiKey) && !apiKey!.startsWith('sk-') && !apiKey!.startsWith('sk-or-') && apiKey !== 'local-offline-ai-engine';
+}
+
 export function getActiveApiKey(apiKey?: string): string {
   return isRealApiKey(apiKey) ? apiKey! : 'local-offline-ai-engine';
 }
 
 function getOpenAIClient(apiKey: string) {
   const isOR = apiKey.startsWith('sk-or-');
+  const isGemini = isGeminiApiKey(apiKey);
   return new OpenAI({
     apiKey,
-    baseURL: isOR ? 'https://openrouter.ai/api/v1' : undefined,
+    baseURL: isOR 
+      ? 'https://openrouter.ai/api/v1' 
+      : isGemini 
+        ? 'https://generativelanguage.googleapis.com/v1beta/openai/' 
+        : undefined,
     defaultHeaders: isOR ? {
       'HTTP-Referer': 'https://ai-agent-studio-beta.vercel.app',
       'X-Title': 'AI Agent Studio',
@@ -74,8 +83,24 @@ export async function chatCompletion(
       return msg;
     });
     
+    const isGemini = isGeminiApiKey(apiKey);
+    let selectedModel = model;
+    if (isGemini) {
+      if (!selectedModel || selectedModel.startsWith('gpt-') || selectedModel.startsWith('o1') || selectedModel.startsWith('o3')) {
+        selectedModel = 'gemini-1.5-flash';
+      }
+    } else if (apiKey.startsWith('sk-or-')) {
+      if (!selectedModel || selectedModel.startsWith('gpt-') || selectedModel.startsWith('o1') || selectedModel.startsWith('o3')) {
+        selectedModel = 'meta-llama/llama-3-8b-instruct:free';
+      }
+    } else {
+      if (!selectedModel) {
+        selectedModel = 'gpt-4o';
+      }
+    }
+
     const response = await client.chat.completions.create({
-      model: model || (apiKey.startsWith('sk-or-') ? 'meta-llama/llama-3-8b-instruct:free' : 'gpt-4o'),
+      model: selectedModel,
       messages: formattedMessages as any,
       temperature,
       max_tokens: maxTokens,
@@ -121,8 +146,24 @@ export async function* streamChatCompletion(
       return msg;
     });
     
+    const isGemini = isGeminiApiKey(apiKey);
+    let selectedModel = model;
+    if (isGemini) {
+      if (!selectedModel || selectedModel.startsWith('gpt-') || selectedModel.startsWith('o1') || selectedModel.startsWith('o3')) {
+        selectedModel = 'gemini-1.5-flash';
+      }
+    } else if (apiKey.startsWith('sk-or-')) {
+      if (!selectedModel || selectedModel.startsWith('gpt-') || selectedModel.startsWith('o1') || selectedModel.startsWith('o3')) {
+        selectedModel = 'meta-llama/llama-3-8b-instruct:free';
+      }
+    } else {
+      if (!selectedModel) {
+        selectedModel = 'gpt-4o';
+      }
+    }
+
     const stream = await client.chat.completions.create({
-      model: model || (apiKey.startsWith('sk-or-') ? 'meta-llama/llama-3-8b-instruct:free' : 'gpt-4o'),
+      model: selectedModel,
       messages: formattedMessages as any,
       temperature,
       max_tokens: maxTokens,
