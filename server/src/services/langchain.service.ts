@@ -56,7 +56,7 @@ export async function runPromptChain(
       let selectedModel = model;
       if (isGemini) {
         if (!selectedModel || selectedModel.startsWith('gpt-') || selectedModel.startsWith('o1') || selectedModel.startsWith('o3')) {
-          selectedModel = 'gemini-1.5-flash';
+          selectedModel = 'gemini-2.5-flash';
         }
       } else if (isOR) {
         if (!selectedModel || selectedModel.startsWith('gpt-') || selectedModel.startsWith('o1') || selectedModel.startsWith('o3')) {
@@ -176,7 +176,7 @@ export async function runConversationChain(
     let selectedModel = model;
     if (isGemini) {
       if (!selectedModel || selectedModel.startsWith('gpt-') || selectedModel.startsWith('o1') || selectedModel.startsWith('o3')) {
-        selectedModel = 'gemini-1.5-flash';
+        selectedModel = 'gemini-2.5-flash';
       }
     } else if (isOR) {
       if (!selectedModel || selectedModel.startsWith('gpt-') || selectedModel.startsWith('o1') || selectedModel.startsWith('o3')) {

@@ -24,10 +24,10 @@ const OPENROUTER_MODELS = [
 ];
 
 const GEMINI_MODELS = [
-  { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', description: 'Fast, lightweight and highly capable', badge: 'Recommended', color: '#0ea5e9' },
-  { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro', description: 'Exceptional reasoning and multimodal tasks', badge: 'Powerful', color: '#6366f1' },
+  { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', description: 'Advanced speed and capabilities', badge: 'Recommended', color: '#8b5cf6' },
   { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash', description: 'Next-gen speed and efficiency', badge: 'New', color: '#10b981' },
-  { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', description: 'Advanced speed and capabilities', badge: 'Latest', color: '#8b5cf6' },
+  { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro', description: 'Exceptional reasoning and multimodal tasks', badge: 'Powerful', color: '#6366f1' },
+  { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', description: 'Fast, lightweight and highly capable', badge: 'Legacy', color: '#0ea5e9' },
 ];
 
 export function SettingsPage() {
@@ -60,7 +60,7 @@ export function SettingsPage() {
           }
         } else if (isGeminiKey) {
           if (!model.startsWith('gemini-')) {
-            setModel('gemini-1.5-flash');
+            setModel('gemini-2.5-flash');
           }
         } else {
           if (model.includes('/') || model.includes(':free') || model.startsWith('gemini-')) {

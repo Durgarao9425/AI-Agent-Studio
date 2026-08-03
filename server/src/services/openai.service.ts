@@ -87,7 +87,7 @@ export async function chatCompletion(
     let selectedModel = model;
     if (isGemini) {
       if (!selectedModel || selectedModel.startsWith('gpt-') || selectedModel.startsWith('o1') || selectedModel.startsWith('o3')) {
-        selectedModel = 'gemini-1.5-flash';
+        selectedModel = 'gemini-2.5-flash';
       }
     } else if (apiKey.startsWith('sk-or-')) {
       if (!selectedModel || selectedModel.startsWith('gpt-') || selectedModel.startsWith('o1') || selectedModel.startsWith('o3')) {
@@ -150,7 +150,7 @@ export async function* streamChatCompletion(
     let selectedModel = model;
     if (isGemini) {
       if (!selectedModel || selectedModel.startsWith('gpt-') || selectedModel.startsWith('o1') || selectedModel.startsWith('o3')) {
-        selectedModel = 'gemini-1.5-flash';
+        selectedModel = 'gemini-2.5-flash';
       }
     } else if (apiKey.startsWith('sk-or-')) {
       if (!selectedModel || selectedModel.startsWith('gpt-') || selectedModel.startsWith('o1') || selectedModel.startsWith('o3')) {
