@@ -14,6 +14,7 @@ import { RAGPage } from './pages/RAGPage';
 import { PlaygroundPage } from './pages/PlaygroundPage';
 import { TimelinePage } from './pages/TimelinePage';
 import { SettingsPage } from './pages/SettingsPage';
+import { ProfilePage } from './pages/ProfilePage';
 
 // Create a TanStack Query client with sensible defaults
 const queryClient = new QueryClient({
@@ -43,6 +44,7 @@ export default function App() {
             <Route path="/playground" element={<PlaygroundPage />} />
             <Route path="/timeline" element={<TimelinePage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
           </Routes>
         </Layout>
       </BrowserRouter>

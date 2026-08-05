@@ -159,6 +159,13 @@ export function ChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, streamingContent]);
 
+  // Auto-select first agent as default
+  useEffect(() => {
+    if (agents && agents.length > 0 && !selectedAgent) {
+      setSelectedAgent(agents[0]);
+    }
+  }, [agents, selectedAgent]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
@@ -174,32 +181,20 @@ export function ChatPage() {
   };
 
   return (
-    <div className="h-[calc(100vh-7rem)] flex gap-4">
+    <div className="h-[calc(100vh-12rem)] md:h-[calc(100vh-7rem)] flex flex-col md:flex-row gap-4 min-h-0 overflow-hidden">
       {/* Agent Selector Sidebar */}
-      <div className="w-64 flex flex-col gap-3">
-        <div className="card p-4">
-          <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3">
+      <div className="w-full md:w-64 flex flex-col gap-3 flex-shrink-0">
+        <div className="md:card md:p-4 p-0 bg-transparent border-none md:bg-[#0d1224] md:border border-white/5 space-y-2 md:space-y-0">
+          <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3 hidden md:block">
             Select Agent
           </h3>
-          <div className="space-y-1.5">
-            <button
-              onClick={() => setSelectedAgent(null)}
-              className={cn(
-                'w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200',
-                !selectedAgent
-                  ? 'bg-violet/15 text-violet-light border border-violet/20'
-                  : 'text-text-secondary hover:bg-white/5 hover:text-text-primary'
-              )}
-            >
-              <Bot size={14} />
-              Default AI
-            </button>
+          <div className="flex md:flex-col gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
             {agents.map((agent) => (
               <button
                 key={agent.id}
                 onClick={() => setSelectedAgent(agent)}
                 className={cn(
-                  'w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 text-left',
+                  'flex-shrink-0 md:w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 text-left border border-white/5',
                   selectedAgent?.id === agent.id
                     ? 'border text-text-primary'
                     : 'text-text-secondary hover:bg-white/5 hover:text-text-primary'
@@ -229,7 +224,7 @@ export function ChatPage() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="card p-4 space-y-2"
+              className="card p-4 space-y-2 hidden md:block"
             >
               <div className="flex items-center gap-2">
                 <span className="text-xl">{selectedAgent.avatar}</span>
@@ -314,7 +309,7 @@ export function ChatPage() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder={`Message ${selectedAgent?.name || 'AI Assistant'}... (Enter to send, Shift+Enter for newline)`}
+                placeholder={`Message ${selectedAgent?.name || 'AI Assistant'}...`}
                 className="textarea min-h-[48px] max-h-[120px] pt-3"
                 rows={1}
                 disabled={isStreaming}
