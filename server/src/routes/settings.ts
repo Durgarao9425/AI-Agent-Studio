@@ -1,12 +1,13 @@
 // routes/settings.ts — Settings validation endpoint
 import { Router, Request, Response } from 'express';
 import OpenAI from 'openai';
+import { isGeminiApiKey } from '../services/openai.service';
 
 const router = Router();
 
 /**
  * POST /api/settings/validate-key
- * Validates an OpenAI API key by making a minimal API call.
+ * Validates an OpenAI/Gemini/OpenRouter API key by making a minimal API call.
  * Returns available models and account info.
  */
 router.post('/validate-key', async (req: Request, res: Response): Promise<void> => {
@@ -28,9 +29,14 @@ router.post('/validate-key', async (req: Request, res: Response): Promise<void> 
 
   try {
     const isOR = apiKey.startsWith('sk-or-');
+    const isGemini = isGeminiApiKey(apiKey);
     const client = new OpenAI({
       apiKey,
-      baseURL: isOR ? 'https://openrouter.ai/api/v1' : undefined,
+      baseURL: isOR 
+        ? 'https://openrouter.ai/api/v1' 
+        : isGemini 
+          ? 'https://generativelanguage.googleapis.com/v1beta/openai/' 
+          : undefined,
       defaultHeaders: isOR ? {
         'HTTP-Referer': 'https://ai-agent-studio-beta.vercel.app',
         'X-Title': 'AI Agent Studio',
@@ -44,9 +50,12 @@ router.post('/validate-key', async (req: Request, res: Response): Promise<void> 
         if (isOR) {
           return m.id.includes('llama') || m.id.includes('gemma') || m.id.includes('mistral') || m.id.includes('claude') || m.id.includes('gpt') || m.id.includes(':free');
         }
+        if (isGemini) {
+          return m.id.includes('gemini');
+        }
         return m.id.includes('gpt') || m.id.includes('o1') || m.id.includes('o3');
       })
-      .map((m) => ({ id: m.id, created: m.created }))
+      .map((m) => ({ id: m.id, created: m.created || Date.now() }))
       .sort((a, b) => b.created - a.created)
       .slice(0, 50);
 
